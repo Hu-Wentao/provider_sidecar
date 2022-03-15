@@ -169,13 +169,12 @@ abstract class ProviderSidecar<EX> extends ChangeNotifier {
   /// 可选条件参数最多使用1个, 如果使用多个,则只有首个非空参数逻辑生效
   /// 如果不适用任何参数,则默认通过
   @protected
-  T? reqWrapper<T>(
-      T? Function() onAccess, {
-        List<SidecarState>? accContain, // state 必须包含在 list 中
-        List<SidecarState>? rejContain, // state 不能出现在 list 中
-        bool Function()? accCustom, // 返回true即通过
-        T? Function()? onReject,
-      }) {
+  T? reqWrapper<T>(T? Function() onAccess, {
+    List<SidecarState>? accContain, // state 必须包含在 list 中
+    List<SidecarState>? rejContain, // state 不能出现在 list 中
+    bool Function()? accCustom, // 返回true即通过
+    T? Function()? onReject,
+  }) {
     // 默认通过
     bool accessed = true;
 
@@ -200,7 +199,7 @@ abstract class ProviderSidecar<EX> extends ChangeNotifier {
 
   T? _setState<T>(SidecarState state, String m, {T Function()? before}) {
     final r = before?.call();
-    log("#[$runtimeType]::_setState# [$state],# [$m]");
+    log("#[$runtimeType]::_setState($state, $m)");
     this.state = state;
     msg = m;
     notifyListeners();

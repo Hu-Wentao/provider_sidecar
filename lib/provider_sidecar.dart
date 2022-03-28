@@ -137,7 +137,7 @@ abstract class ProviderSidecar<EX> extends ChangeNotifier {
       log) =>
       _l = log;
 
-  static get log => _l ?? (_) {};
+  get log => _l ?? (_) {};
 
   /// 0.1 `构造方法`
   final EX Function(dynamic e, StackTrace s)? onCatch;
@@ -198,12 +198,14 @@ abstract class ProviderSidecar<EX> extends ChangeNotifier {
   /// set ----------------------------------------------------------------------
 
   T? _setState<T>(SidecarState state, String m, {T Function()? before}) {
-    final r = before?.call();
     log("#[$runtimeType]::_setState($state, $m)");
-    this.state = state;
-    msg = m;
-    notifyListeners();
-    return r;
+    if (m != msg || state != this.state || before != null) {
+      final r = before?.call();
+      this.state = state;
+      msg = m;
+      notifyListeners();
+      return r;
+    }
   }
 
   T? setUninitialized<T>([String m = "未初始化", T Function()? before]) =>

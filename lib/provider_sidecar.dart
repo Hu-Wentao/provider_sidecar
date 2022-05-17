@@ -133,8 +133,8 @@ abstract class ProviderSidecar<EX> extends ChangeNotifier {
   static Function(Object? message, [Object? error, StackTrace? stackTrace])? _l;
 
   static setLogger(
-      Function(Object? message, [Object? error, StackTrace? stackTrace])
-      log) =>
+          Function(Object? message, [Object? error, StackTrace? stackTrace])
+              log) =>
       _l = log;
 
   get log => _l ?? (_) {};
@@ -169,7 +169,8 @@ abstract class ProviderSidecar<EX> extends ChangeNotifier {
   /// 可选条件参数最多使用1个, 如果使用多个,则只有首个非空参数逻辑生效
   /// 如果不适用任何参数,则默认通过
   @protected
-  T? reqWrapper<T>(T? Function() onAccess, {
+  T? reqWrapper<T>(
+    T? Function() onAccess, {
     List<SidecarState>? accContain, // state 必须包含在 list 中
     List<SidecarState>? rejContain, // state 不能出现在 list 中
     bool Function()? accCustom, // 返回true即通过
@@ -227,7 +228,7 @@ abstract class ProviderSidecar<EX> extends ChangeNotifier {
     Function()? onInitializing,
   }) =>
       actWrapper(() async {
-        setInitializing();
+        setInitializing(m);
         // 逻辑执行完毕后,应当调用 setXxx方法
         await onInitializing?.call() ?? await this.onInitializing();
       });

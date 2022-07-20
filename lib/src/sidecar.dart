@@ -145,7 +145,6 @@ abstract class Sidecar<EX> extends ChangeNotifier {
   String msg;
 
   /// 统一处理异常
-  @protected
   Future<EX?> actWrapper([Function? action]) async {
     try {
       await action?.call();

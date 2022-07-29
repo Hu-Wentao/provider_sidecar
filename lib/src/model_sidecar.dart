@@ -66,7 +66,7 @@ abstract class ModelSidecar<DATA, EX> extends ChangeNotifier {
 
   /// 打印 info级别日志
   lgInfo(Object? message, {Object? error, StackTrace? stackTrace}) =>
-      _lInfo?.call("#[$runtimeType]::$message", error, stackTrace);
+      _lInfo?.call("[$runtimeType]::$message", error, stackTrace);
 
   /// 打印 shot级别日志,同时附带[StackTrace]
   lgShot(Object? message, [Object? error, StackTrace? stackTrace]) =>
@@ -104,18 +104,19 @@ abstract class ModelSidecar<DATA, EX> extends ChangeNotifier {
   // 实现类可以附加[data]所引用的实例等等(建议也包装为Model)
 
   /// 预定义方法: 更新[data]
+  /// [silence] false表示调用后立即setState; true一般用于在 [onFetch]中调用
   /// [state] 取两种状态,
   ///   [ModelState.active],表示通过Realtime刷新;
   ///   [ModelState.done],表示通过REST刷新
-  ///
   @mustCallSuper
   DATA updateData(
     DATA data, {
+    bool silence = false,
     ModelState state = ModelState.active,
     String msg = '刷新数据',
   }) {
     this.data = data;
-    _setState(state, msg);
+    if (!silence) _setState(state, msg);
     return data;
   }
 
@@ -163,7 +164,7 @@ abstract class ModelSidecar<DATA, EX> extends ChangeNotifier {
   /// set ----------------------------------------------------------------------
 
   T? _setState<T>(ModelState state, String m, {T? Function()? before}) {
-    log("_setState($state, $m)");
+    log("_setState# ${state.name}, $m");
     if (m != msg || state != this.state || before != null) {
       final r = before?.call();
       this.state = state;

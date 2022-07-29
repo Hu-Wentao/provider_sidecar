@@ -39,27 +39,18 @@ enum ModelState {
 /// [EX] 抛出的异常类型, 便于UI代码展示错误信息
 /// [DATA] 核心贫血数据类, 一般用DTO
 abstract class ModelSidecar<DATA, EX> extends ChangeNotifier {
-  // 日志
   @Deprecated("_lInfo")
-  static Function(Object? message, [Object? error, StackTrace? stackTrace])? _l;
+  get _l => _lInfo;
 
-  // 打印日志
+  // 打印 info日志
   static Function(Object? message, [Object? error, StackTrace? stackTrace])?
       _lInfo;
 
-  // 自动打印当前 stacktrace, 用于debug
+  // 打印 shot日志
   static Function(Object? message, [Object? error, StackTrace? stackTrace])?
       _lShot;
 
-  @Deprecated("setInfoLogger")
-  static void setLogger(
-      Function(Object? message, [Object? error, StackTrace? stackTrace]) log) {
-    _l = log;
-    _lInfo ??= log;
-    _lShot ??= log;
-  }
-
-  static void setInfoLogger(
+  static setLogger(
           Function(Object? message, [Object? error, StackTrace? stackTrace])
               log) =>
       _lInfo = log;
@@ -70,15 +61,15 @@ abstract class ModelSidecar<DATA, EX> extends ChangeNotifier {
       _lShot = log;
 
   @Deprecated("lgInfo")
-  get log => _l ?? (_) {};
+  get log => lgInfo;
 
   /// 打印 info级别日志
   lgInfo(Object? message, {Object? error, StackTrace? stackTrace}) =>
-      (_lInfo ?? _l)?.call("#[$runtimeType]::$message", error, stackTrace);
+      _lInfo?.call("#[$runtimeType]::$message", error, stackTrace);
 
   /// 打印 shot级别日志,同时附带[StackTrace]
   lgShot(Object? message, [Object? error, StackTrace? stackTrace]) =>
-      (_lShot ?? _lInfo ?? _l)?.call(
+      (_lShot ?? _lInfo)?.call(
           "#[$runtimeType]::$message\n${StackTrace.current}",
           error,
           stackTrace);

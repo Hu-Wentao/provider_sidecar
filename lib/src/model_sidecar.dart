@@ -60,11 +60,8 @@ abstract class ModelSidecar<DATA, EX> extends ChangeNotifier {
               log) =>
       _lShot = log;
 
-  @Deprecated("lgInfo")
-  get log => lgInfo;
-
   /// 打印 info级别日志
-  lgInfo(Object? message, {Object? error, StackTrace? stackTrace}) =>
+  log(Object? message, {Object? error, StackTrace? stackTrace}) =>
       _lInfo?.call("#[$runtimeType]::$message", error, stackTrace);
 
   /// 打印 shot级别日志,同时附带[StackTrace]

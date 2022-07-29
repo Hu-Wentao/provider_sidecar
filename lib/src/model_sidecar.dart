@@ -40,14 +40,48 @@ enum ModelState {
 /// [DATA] 核心贫血数据类, 一般用DTO
 abstract class ModelSidecar<DATA, EX> extends ChangeNotifier {
   // 日志
+  @Deprecated("_lInfo")
   static Function(Object? message, [Object? error, StackTrace? stackTrace])? _l;
 
-  static setLogger(
+  // 打印日志
+  static Function(Object? message, [Object? error, StackTrace? stackTrace])?
+      _lInfo;
+
+  // 自动打印当前 stacktrace, 用于debug
+  static Function(Object? message, [Object? error, StackTrace? stackTrace])?
+      _lShot;
+
+  @Deprecated("setInfoLogger")
+  static void setLogger(
+      Function(Object? message, [Object? error, StackTrace? stackTrace]) log) {
+    _l = log;
+    _lInfo ??= log;
+    _lShot ??= log;
+  }
+
+  static void setInfoLogger(
           Function(Object? message, [Object? error, StackTrace? stackTrace])
               log) =>
-      _l = log;
+      _lInfo = log;
 
+  static void setShotLogger(
+          Function(Object? message, [Object? error, StackTrace? stackTrace])
+              log) =>
+      _lShot = log;
+
+  @Deprecated("lgInfo")
   get log => _l ?? (_) {};
+
+  /// 打印 info级别日志
+  lgInfo(Object? message, {Object? error, StackTrace? stackTrace}) =>
+      (_lInfo ?? _l)?.call("#[$runtimeType]::$message", error, stackTrace);
+
+  /// 打印 shot级别日志,同时附带[StackTrace]
+  lgShot(Object? message, [Object? error, StackTrace? stackTrace]) =>
+      (_lShot ?? _lInfo ?? _l)?.call(
+          "#[$runtimeType]::$message\n${StackTrace.current}",
+          error,
+          stackTrace);
 
   /// 0.1 `构造方法`
   final EX Function(dynamic e, StackTrace s)? onCatch;
@@ -98,7 +132,7 @@ abstract class ModelSidecar<DATA, EX> extends ChangeNotifier {
     try {
       await action?.call();
     } catch (e, s) {
-      log('#[$runtimeType]::actWrapper# $e,$s');
+      log('actWrapper# $e,$s');
       return onCatch?.call(e, s);
     }
     return null;
@@ -128,7 +162,7 @@ abstract class ModelSidecar<DATA, EX> extends ChangeNotifier {
     if (accessed) {
       return onAccess.call();
     } else {
-      log("#[$runtimeType]::reqWrapper#已拒绝请求#状态[$state],[$msg]");
+      log("reqWrapper#已拒绝请求#状态[$state],[$msg]");
       return onReject?.call();
     }
   }
@@ -137,7 +171,7 @@ abstract class ModelSidecar<DATA, EX> extends ChangeNotifier {
   /// set ----------------------------------------------------------------------
 
   T? _setState<T>(ModelState state, String m, {T? Function()? before}) {
-    log("#[$runtimeType]::_setState($state, $m)");
+    log("_setState($state, $m)");
     if (m != msg || state != this.state || before != null) {
       final r = before?.call();
       this.state = state;

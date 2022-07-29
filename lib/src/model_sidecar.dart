@@ -60,8 +60,12 @@ abstract class ModelSidecar<DATA, EX> extends ChangeNotifier {
               log) =>
       _lShot = log;
 
+  /// 默认Info日志
+  log(Object? message, [Object? error, StackTrace? stackTrace]) =>
+      lgInfo(message, error: error, stackTrace: stackTrace);
+
   /// 打印 info级别日志
-  log(Object? message, {Object? error, StackTrace? stackTrace}) =>
+  lgInfo(Object? message, {Object? error, StackTrace? stackTrace}) =>
       _lInfo?.call("#[$runtimeType]::$message", error, stackTrace);
 
   /// 打印 shot级别日志,同时附带[StackTrace]

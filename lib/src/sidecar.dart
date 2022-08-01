@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:provider_sidecar/provider_sidecar.dart';
 
 /// 使用指南
 /// 0. 创建类与依赖注入
@@ -121,27 +122,19 @@ import 'package:flutter/foundation.dart';
 ///
 /// 对ChangeNotifier进行包装
 /// EX 抛出的异常类型, 便于UI代码展示错误信息
-abstract class Sidecar<EX> extends ChangeNotifier {
-  // 日志
-  static Function(Object? message, [Object? error, StackTrace? stackTrace])? _l;
-
-  static setLogger(
-          Function(Object? message, [Object? error, StackTrace? stackTrace])
-              log) =>
-      _l = log;
-
-  get log => _l ?? (_) {};
-
+abstract class Sidecar<S, EX> extends ChangeNotifier with LoggerMx {
   /// 0.1 `构造方法`
   final EX Function(dynamic e, StackTrace s)? onCatch;
 
   // 配置默认的初始化状态 可以省略`setUninitialized`方法
   Sidecar({
+    required this.state,
     this.msg = 'Init with Constructor',
     this.onCatch,
   });
 
   /// 0.2 配置核心`状态变量`或`get方法`
+  S state;
   String msg;
 
   /// 统一处理异常
@@ -149,7 +142,7 @@ abstract class Sidecar<EX> extends ChangeNotifier {
     try {
       await action?.call();
     } catch (e, s) {
-      log('#[$runtimeType]::actWrapper# $e,$s');
+      log('actWrapper# $e,$s');
       return onCatch?.call(e, s);
     }
     return null;
@@ -157,16 +150,15 @@ abstract class Sidecar<EX> extends ChangeNotifier {
 
   /// 0.3 配置 `setXxx`方法
   /// set ----------------------------------------------------------------------
-
-  T? setState<T>(String m, {T Function()? before}) {
-    log("#[$runtimeType]::_setState($m)");
-    if (m != msg || before != null) {
+  T? setState<T>(S state, String m, {T? Function()? before}) {
+    log("setState# $state, $m");
+    if (m != msg || state != this.state || before != null) {
       final r = before?.call();
+      this.state = state;
       msg = m;
       notifyListeners();
       return r;
     }
     return null;
   }
-
 }

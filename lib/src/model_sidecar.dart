@@ -98,6 +98,8 @@ abstract class ModelSidecar<DATA, EX> extends ChangeNotifier {
   /// 查看当前Model是否处于贫血状态
   bool get isAnemic => state == ModelState.init;
 
+  bool get isRich => !isAnemic;
+
   // 预定义方法: 更新[data]
   // [silence] false表示调用后立即setState; true一般用于在 [onFetch]中调用
   // [state] 取两种状态,

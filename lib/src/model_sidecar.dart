@@ -54,11 +54,11 @@ abstract class ModelSidecar<DATA, EX> extends Sidecar<ModelState, EX> {
 
   ModelSidecar(
     this.data,
+    EX Function(dynamic e, StackTrace s)? onCatch, {
     this.onFetchCall,
     this.onResetCall,
     this.onSubscriptionCall,
     this.onCloseSubsCall,
-    EX Function(dynamic e, StackTrace s)? onCatch, {
     ModelState state = ModelState.init,
     String msg = 'Init with Constructor',
   }) : super(state: state, msg: msg, onCatch: onCatch);

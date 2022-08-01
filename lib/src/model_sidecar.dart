@@ -225,8 +225,9 @@ abstract class ModelSidecar<DATA, EX> extends ChangeNotifier {
 ///
 /// 包装Model的状态变更方法
 mixin ModelStateChangeMx<DATA, EX> on ModelSidecar<DATA, EX> {
-  /// (仅用于初始化)
-  /// 先 开启订阅; 后 获取数据, 避免获取数据阻塞时间过长导致没有及时开启订阅
+  /// 开启订阅并获取数据
+  /// 先 开启订阅; 后 获取数据,
+  /// 可以避免获取数据阻塞时间过长导致没有及时开启订阅
   /// [ModelState.init] -> [ModelState.active]
   Future<EX?> actInitSubscription() async =>
       await actWrapper(() => reqWrapper(() async {
@@ -235,7 +236,7 @@ mixin ModelStateChangeMx<DATA, EX> on ModelSidecar<DATA, EX> {
             setActive("已完成 状态初始化(开订阅+获取)");
           }, accWhen: () => state == ModelState.init));
 
-  /// 清理状态 (清理充血数据, 充血->贫血)
+  /// 关闭订阅并重置数据
   /// 先 关闭订阅; 后 清理缓存状态
   /// ![ModelState.init]   -> [ModelState.init]
   Future<EX?> actCloseReset() async =>
@@ -255,7 +256,7 @@ mixin ModelStateChangeMx<DATA, EX> on ModelSidecar<DATA, EX> {
 
   /// 关闭状态订阅 (停止刷新数据,但保持充血)
   /// [ModelState.active]  -> [ModelState.done]
-  Future<EX?> actCloseSubs() async =>
+  Future<EX?> actUnsubscribe() async =>
       await actWrapper(() => reqWrapper(() async {
             await onCloseSubs();
             setDone("已关闭状态订阅(关订阅)");
@@ -293,6 +294,9 @@ mixin ModelStateChangeMx<DATA, EX> on ModelSidecar<DATA, EX> {
 
   /// Deprecated 方法
   /// ----------------------------------------------------------------------
+
+  @Deprecated('actUnsubscribe')
+  Future<EX?> actCloseSubs() => actUnsubscribe();
 
   @Deprecated('actCloseReset')
   Future<EX?> actReset() => actCloseReset();

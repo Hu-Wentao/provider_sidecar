@@ -1,5 +1,7 @@
 import 'package:flutter/foundation.dart';
 
+import 'sidecar.dart';
+
 /// 使用指南
 /// 0. 创建类与依赖注入
 /// 继承`ProviderSidecar`并实现方法;
@@ -128,42 +130,14 @@ enum SidecarState {
 ///
 /// 对ChangeNotifier进行包装
 /// EX 抛出的异常类型, 便于UI代码展示错误信息
-abstract class ProviderSidecar<EX> extends ChangeNotifier {
-  // 日志
-  static Function(Object? message, [Object? error, StackTrace? stackTrace])? _l;
-
-  static setLogger(
-          Function(Object? message, [Object? error, StackTrace? stackTrace])
-              log) =>
-      _l = log;
-
-  get log => _l ?? (_) {};
-
-  /// 0.1 `构造方法`
-  final EX Function(dynamic e, StackTrace s)? onCatch;
-
+@Deprecated('建议使用 ModelSidecar')
+abstract class ProviderSidecar<EX> extends Sidecar<SidecarState, EX> {
   // 配置默认的初始化状态 可以省略`setUninitialized`方法
   ProviderSidecar({
-    this.state = SidecarState.uninitialized,
-    this.msg = 'Init with Constructor',
-    this.onCatch,
-  });
-
-  /// 0.2 配置核心`状态变量`或`get方法`
-  SidecarState state;
-  String msg;
-
-  /// 统一处理异常
-  @protected
-  Future<EX?> actWrapper([Function? action]) async {
-    try {
-      await action?.call();
-    } catch (e, s) {
-      log('#[$runtimeType]::actWrapper# $e,$s');
-      return onCatch?.call(e, s);
-    }
-    return null;
-  }
+    SidecarState state = SidecarState.uninitialized,
+    String msg = 'Init with Constructor',
+    EX Function(dynamic e, StackTrace s)? onCatch,
+  }) : super(state: state, msg: msg, onCatch: onCatch);
 
   /// 处理前置触发条件, 防抖节流等
   /// 可选条件参数最多使用1个, 如果使用多个,则只有首个非空参数逻辑生效
@@ -197,27 +171,14 @@ abstract class ProviderSidecar<EX> extends ChangeNotifier {
 
   /// 0.3 配置 `setXxx`方法
   /// set ----------------------------------------------------------------------
-
-  T? _setState<T>(SidecarState state, String m, {T Function()? before}) {
-    log("#[$runtimeType]::_setState($state, $m)");
-    if (m != msg || state != this.state || before != null) {
-      final r = before?.call();
-      this.state = state;
-      msg = m;
-      notifyListeners();
-      return r;
-    }
-    return null;
-  }
-
   T? setUninitialized<T>([String m = "未初始化", T Function()? before]) =>
-      _setState(SidecarState.uninitialized, m, before: before);
+      setState(SidecarState.uninitialized, m, before: before);
 
   T? setInitializing<T>([String m = "初始化...", T Function()? before]) =>
-      _setState(SidecarState.initializing, m, before: before);
+      setState(SidecarState.initializing, m, before: before);
 
   T? setInitialized<T>([String m = "初始化完成", T Function()? before]) =>
-      _setState(SidecarState.initialized, m, before: before);
+      setState(SidecarState.initialized, m, before: before);
 
   /// 0.4 配置 `actXxx`方法
   /// act ----------------------------------------------------------------------

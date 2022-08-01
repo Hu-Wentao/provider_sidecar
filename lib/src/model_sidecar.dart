@@ -224,8 +224,91 @@ abstract class ModelSidecar<DATA, EX> extends ChangeNotifier {
       setDone(m, before);
 }
 
+abstract class ModelSidecarWithCall<DATA, EX> extends ModelSidecar<DATA, EX> {
+  ModelSidecarWithCall(
+    DATA data,
+    EX Function(dynamic e, StackTrace s)? onCatch, {
+    this.onFetchCall,
+    this.onResetCall,
+    this.onSubscriptionCall,
+    this.onCloseSubsCall,
+  }) : super(data, onCatch);
+
+  /// 开启订阅并获取数据
+  /// 先 开启订阅; 后 获取数据,
+  /// 可以避免获取数据阻塞时间过长导致没有及时开启订阅
+  /// [ModelState.init] -> [ModelState.active]
+  Future<EX?> actInitSubscription() async =>
+      await actWrapper(() => reqWrapper(() async {
+            final active = onSubscriptionCall != null;
+            await onSubscriptionCall?.call();
+            await onFetchCall?.call(isActive: active);
+            setActive(
+                "初始化完成(开订阅[${onSubscriptionCall != null}], 获取数据[${onFetchCall != null}])");
+          }, accWhen: () => state == ModelState.init));
+
+  /// 关闭订阅并重置数据
+  /// 先 关闭订阅; 后 清理缓存状态
+  /// ![ModelState.init]   -> [ModelState.init]
+  Future<EX?> actCloseReset() async =>
+      await actWrapper(() => reqWrapper(() async {
+            await onCloseSubsCall?.call();
+            await onResetCall?.call();
+            setInit(
+                "重置完成(关订阅[${onCloseSubsCall != null}], 清理数据[${onResetCall != null}])");
+          }, accWhen: () => state != ModelState.init));
+
+  /// 开启状态订阅 (持续刷新数据,保持充血)
+  /// ![ModelState.active] -> [ModelState.active]
+  Future<EX?> actSubscription() async =>
+      await actWrapper(() => reqWrapper(() async {
+            await onSubscriptionCall?.call();
+            setActive("开订阅[${onSubscriptionCall != null}]");
+          }, accWhen: () => state != ModelState.active));
+
+  /// 关闭状态订阅 (停止刷新数据,但保持充血)
+  /// [ModelState.active]  -> [ModelState.done]
+  Future<EX?> actUnsubscribe() async =>
+      await actWrapper(() => reqWrapper(() async {
+            await onCloseSubsCall?.call();
+            setDone("关订阅[${onCloseSubsCall != null}]");
+          }, accWhen: () => state == ModelState.active));
+
+  /// (全量)刷新状态 (单次刷新数据,保持充血)
+  /// 先 清理缓存状态; 后 获取状态数据
+  ///  any                  -> [ModelState.done]
+  Future<EX?> actRefresh({bool isActive = false}) async =>
+      await actWrapper(() => reqWrapper(() async {
+            await onResetCall?.call();
+            await onFetchCall?.call(isActive: isActive);
+            setActive(
+                "状态刷新完成(清理[${onResetCall != null}], 获取数据[${onFetchCall != null}])");
+          }));
+
+  /// 开启订阅流 (增量刷新数据)
+  @protected
+  FutureOr<void> Function()? onSubscriptionCall;
+
+  /// 关闭订阅流 (停止刷新数据)
+  @protected
+  FutureOr<void> Function()? onCloseSubsCall;
+
+  /// 获取状态数据 (全量拉取数据)
+  /// 对于 数据: 设为null或clear()
+  /// 对于 子状态[ModelSidecar] : 根据需要,调用 [actInitSubscription]
+  @protected
+  FutureOr<void> Function({bool isActive})? onFetchCall;
+
+  /// 清理缓存数据 (清理数据)
+  /// 对于 数据: 设为null或clear()
+  /// 对于 子状态[ModelSidecar] : 调用 [actCloseReset]
+  @protected
+  FutureOr<void> Function()? onResetCall;
+}
+
 ///
 /// 包装Model的状态变更方法
+@Deprecated('use ModelSidecarWithCall')
 mixin ModelStateChangeMx<DATA, EX> on ModelSidecar<DATA, EX> {
   /// 开启订阅并获取数据
   /// 先 开启订阅; 后 获取数据,

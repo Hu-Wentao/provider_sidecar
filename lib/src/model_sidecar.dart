@@ -98,13 +98,21 @@ abstract class ModelSidecar<DATA, EX> extends ChangeNotifier {
   /// 查看当前Model是否处于贫血状态
   bool get isAnemic => state == ModelState.init;
 
-  // 实现类可以附加[data]所引用的实例等等(建议也包装为Model)
-
-  /// 预定义方法: 更新[data]
-  /// [silence] false表示调用后立即setState; true一般用于在 [onFetch]中调用
-  /// [state] 取两种状态,
-  ///   [ModelState.active],表示通过Realtime刷新;
-  ///   [ModelState.done],表示通过REST刷新
+  // 预定义方法: 更新[data]
+  // [silence] false表示调用后立即setState; true一般用于在 [onFetch]中调用
+  // [state] 取两种状态,
+  //   [ModelState.active],表示通过Realtime刷新;
+  //   [ModelState.done],表示通过REST刷新
+  /// [data] 一般来自DTO, 一个[data]只对应一个[ModelSidecar]
+  /// 如果[data]刷新,则应当新建一个[ModelSidecar],替换原有的.
+  /// 而不是调用原[ModelSidecar]的[updateData]
+  ///   以FamilyModel为例, 其子状态PersonModel的核心数据可以仅仅只是一个 personId
+  ///     如果 personId变更,
+  ///     则其对应的PersonModel应当随之销毁,重新建立PersonModel进行替换
+  /// 如果遇到必须调用[updateData]的情况, 则很可能是因为设计有问题. 如缺少上层状态等
+  ///   以UserModel为例,如果要恢复登录用户的状态,
+  ///     则应当添加上层状态AppStateModel,用于管理UserModel,而不是在内部调用[updateData]
+  @Deprecated('避免调用本方法! data一般不单独变更,应当与Model一一对应')
   @mustCallSuper
   DATA updateData(
     DATA data, {

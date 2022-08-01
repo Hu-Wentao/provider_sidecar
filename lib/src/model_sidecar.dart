@@ -39,9 +39,6 @@ enum ModelState {
 /// [EX] 抛出的异常类型, 便于UI代码展示错误信息
 /// [DATA] 核心贫血数据类, 一般用DTO
 abstract class ModelSidecar<DATA, EX> extends ChangeNotifier {
-  @Deprecated("_lInfo")
-  get _l => _lInfo;
-
   // 打印 info日志
   static Function(Object? message, [Object? error, StackTrace? stackTrace])?
       _lInfo;
@@ -201,6 +198,8 @@ abstract class ModelSidecar<DATA, EX> extends ChangeNotifier {
 
   /// Deprecated 方法
   /// ----------------------------------------------------------------------
+  @Deprecated("_lInfo")
+  get _l => _lInfo;
 
   @Deprecated('setInit')
   T? setUninitialized<T>([String m = "初始状态", T Function()? before]) =>
@@ -219,19 +218,26 @@ abstract class ModelSidecar<DATA, EX> extends ChangeNotifier {
 /// 包装Model的状态变更方法
 mixin ModelStateChangeMx<DATA, EX> on ModelSidecar<DATA, EX> {
   /// (仅用于初始化)
-  /// 先 开始持续订阅; 后 获取全部数据
+  /// 先 开启订阅; 后 获取数据, 避免获取数据阻塞时间过长导致没有及时开启订阅
   /// [ModelState.init] -> [ModelState.active]
   Future<EX?> actInitSubscription() async =>
       await actWrapper(() => reqWrapper(() async {
-            // 先 订阅更新
             await onSubscription();
-            // 后 获取全部数据
             await onFetch(isActive: true);
             setActive("已完成 状态初始化(开订阅+获取)");
           }, accWhen: () => state == ModelState.init));
 
-  /// (增量) 开始持续订阅状态 (持续刷新数据,保持充血)
-  /// 仅开启订阅
+  /// 清理状态 (清理充血数据, 充血->贫血)
+  /// 先 关闭订阅; 后 清理缓存状态
+  /// ![ModelState.init]   -> [ModelState.init]
+  Future<EX?> actCloseReset() async =>
+      await actWrapper(() => reqWrapper(() async {
+            await onCloseSubs();
+            await onReset();
+            setInit("已关闭重置为初始状态(关订阅+清理)");
+          }, accWhen: () => state != ModelState.init));
+
+  /// 开启状态订阅 (持续刷新数据,保持充血)
   /// ![ModelState.active] -> [ModelState.active]
   Future<EX?> actSubscription() async =>
       await actWrapper(() => reqWrapper(() async {
@@ -240,7 +246,6 @@ mixin ModelStateChangeMx<DATA, EX> on ModelSidecar<DATA, EX> {
           }, accWhen: () => state != ModelState.active));
 
   /// 关闭状态订阅 (停止刷新数据,但保持充血)
-  /// 仅关闭订阅
   /// [ModelState.active]  -> [ModelState.done]
   Future<EX?> actCloseSubs() async =>
       await actWrapper(() => reqWrapper(() async {
@@ -251,21 +256,12 @@ mixin ModelStateChangeMx<DATA, EX> on ModelSidecar<DATA, EX> {
   /// (全量)刷新状态 (单次刷新数据,保持充血)
   /// 先 清理缓存状态; 后 获取状态数据
   ///  any                  -> [ModelState.done]
-  Future<EX?> actFetch({bool isActive = false}) async =>
+  Future<EX?> actRefresh({bool isActive = false}) async =>
       await actWrapper(() => reqWrapper(() async {
             await onReset();
             await onFetch(isActive: isActive);
             setActive("已完成 状态刷新(清理+获取)");
           }));
-
-  /// 重置状态 (清理充血数据, 充血->贫血)
-  /// 先 关闭订阅; 后 清理缓存状态
-  /// ![ModelState.init]   -> [ModelState.init]
-  Future<EX?> actReset() async => await actWrapper(() => reqWrapper(() async {
-        await onCloseSubs();
-        await onReset();
-        setInit("已关闭重置为初始状态(关订阅+清理)");
-      }, accWhen: () => state != ModelState.init));
 
   /// 开启订阅流 (增量刷新数据)
   @protected
@@ -276,10 +272,24 @@ mixin ModelStateChangeMx<DATA, EX> on ModelSidecar<DATA, EX> {
   FutureOr<void> onCloseSubs();
 
   /// 获取状态数据 (全量拉取数据)
+  /// 对于 数据: 设为null或clear()
+  /// 对于 子状态[ModelSidecar] : 根据需要,调用 [actInitSubscription]
   @protected
   FutureOr<void> onFetch({bool isActive = false});
 
-  /// 清理缓存状态 (清理数据)
+  /// 清理缓存数据 (清理数据)
+  /// 对于 数据: 设为null或clear()
+  /// 对于 子状态[ModelSidecar] : 调用 [actCloseReset]
   @protected
   FutureOr<void> onReset();
+
+  /// Deprecated 方法
+  /// ----------------------------------------------------------------------
+
+  @Deprecated('actCloseReset')
+  Future<EX?> actReset() => actCloseReset();
+
+  @Deprecated('actRefresh')
+  Future<EX?> actFetch({bool isActive = false}) =>
+      actRefresh(isActive: isActive);
 }

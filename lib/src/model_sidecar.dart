@@ -3,8 +3,6 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:provider_sidecar/provider_sidecar.dart';
 
-import 'mx/mx.dart';
-
 ///
 /// [ModelSidecar]使用指南
 
@@ -48,10 +46,18 @@ abstract class ModelSidecar<DATA, EX> extends Sidecar<ModelState, EX> {
     ModelState state = ModelState.init,
     String msg = 'Init with Constructor',
     EX Function(dynamic e, StackTrace s)? onCatch,
+    this.onFetchCall,
+    this.onResetCall,
+    this.onSubscriptionCall,
+    this.onCloseSubsCall,
   }) : super(state: state, msg: msg, onCatch: onCatch);
 
   ModelSidecar(
     this.data,
+    this.onFetchCall,
+    this.onResetCall,
+    this.onSubscriptionCall,
+    this.onCloseSubsCall,
     EX Function(dynamic e, StackTrace s)? onCatch, {
     ModelState state = ModelState.init,
     String msg = 'Init with Constructor',
@@ -121,57 +127,7 @@ abstract class ModelSidecar<DATA, EX> extends Sidecar<ModelState, EX> {
           m,
           before: () => before?.call());
 
-  /// Deprecated 方法
-  /// ----------------------------------------------------------------------
-  // 预定义方法: 更新[data]
-  // [silence] false表示调用后立即setState; true一般用于在 [onFetch]中调用
-  // [state] 取两种状态,
-  //   [ModelState.active],表示通过Realtime刷新;
-  //   [ModelState.done],表示通过REST刷新
-  /// [data] 一般来自DTO, 一个[data]只对应一个[ModelSidecar]
-  /// 如果[data]刷新,则应当新建一个[ModelSidecar],替换原有的.
-  /// 而不是调用原[ModelSidecar]的[updateData]
-  ///   以FamilyModel为例, 其子状态PersonModel的核心数据可以仅仅只是一个 personId
-  ///     如果 personId变更,
-  ///     则其对应的PersonModel应当随之销毁,重新建立PersonModel进行替换
-  /// 如果遇到必须调用[updateData]的情况, 则很可能是因为设计有问题. 如缺少上层状态等
-  ///   以UserModel为例,如果要恢复登录用户的状态,
-  ///     则应当添加上层状态AppStateModel,用于管理UserModel,而不是在内部调用[updateData]
-  @Deprecated('避免调用本方法! data一般不单独变更,应当与Model一一对应')
-  @mustCallSuper
-  DATA updateData(
-    DATA data, {
-    bool silence = false,
-    ModelState state = ModelState.active,
-    String msg = '刷新数据',
-  }) {
-    this.data = data;
-    if (!silence) setState(state, msg);
-    return data;
-  }
-
-  @Deprecated('setInit')
-  T? setUninitialized<T>([String m = "初始状态", T Function()? before]) =>
-      setInit(m, before);
-
-  @Deprecated('setRefresh')
-  T? setInitializing<T>([String m = "刷新状态...", T Function()? before]) =>
-      setActive(m, before);
-
-  @Deprecated('setDone')
-  T? setInitialized<T>([String m = "完成刷新", T Function()? before]) =>
-      setDone(m, before);
-}
-
-abstract class ModelSidecarWithCall<DATA, EX> extends ModelSidecar<DATA, EX> {
-  ModelSidecarWithCall(
-    DATA data,
-    EX Function(dynamic e, StackTrace s)? onCatch, {
-    this.onFetchCall,
-    this.onResetCall,
-    this.onSubscriptionCall,
-    this.onCloseSubsCall,
-  }) : super(data, onCatch);
+  /// === 状态刷新
 
   /// 开启订阅并获取数据
   /// 先 开启订阅; 后 获取数据,
@@ -243,6 +199,47 @@ abstract class ModelSidecarWithCall<DATA, EX> extends ModelSidecar<DATA, EX> {
   /// 对于 子状态[ModelSidecar] : 调用 [actCloseReset]
   @protected
   FutureOr<void> Function()? onResetCall;
+
+  /// Deprecated 方法
+  /// ----------------------------------------------------------------------
+  // 预定义方法: 更新[data]
+  // [silence] false表示调用后立即setState; true一般用于在 [onFetch]中调用
+  // [state] 取两种状态,
+  //   [ModelState.active],表示通过Realtime刷新;
+  //   [ModelState.done],表示通过REST刷新
+  /// [data] 一般来自DTO, 一个[data]只对应一个[ModelSidecar]
+  /// 如果[data]刷新,则应当新建一个[ModelSidecar],替换原有的.
+  /// 而不是调用原[ModelSidecar]的[updateData]
+  ///   以FamilyModel为例, 其子状态PersonModel的核心数据可以仅仅只是一个 personId
+  ///     如果 personId变更,
+  ///     则其对应的PersonModel应当随之销毁,重新建立PersonModel进行替换
+  /// 如果遇到必须调用[updateData]的情况, 则很可能是因为设计有问题. 如缺少上层状态等
+  ///   以UserModel为例,如果要恢复登录用户的状态,
+  ///     则应当添加上层状态AppStateModel,用于管理UserModel,而不是在内部调用[updateData]
+  @Deprecated('避免调用本方法! data一般不单独变更,应当与Model一一对应')
+  @mustCallSuper
+  DATA updateData(
+    DATA data, {
+    bool silence = false,
+    ModelState state = ModelState.active,
+    String msg = '刷新数据',
+  }) {
+    this.data = data;
+    if (!silence) setState(state, msg);
+    return data;
+  }
+
+  @Deprecated('setInit')
+  T? setUninitialized<T>([String m = "初始状态", T Function()? before]) =>
+      setInit(m, before);
+
+  @Deprecated('setRefresh')
+  T? setInitializing<T>([String m = "刷新状态...", T Function()? before]) =>
+      setActive(m, before);
+
+  @Deprecated('setDone')
+  T? setInitialized<T>([String m = "完成刷新", T Function()? before]) =>
+      setDone(m, before);
 }
 
 ///
@@ -253,6 +250,7 @@ mixin ModelStateChangeMx<DATA, EX> on ModelSidecar<DATA, EX> {
   /// 先 开启订阅; 后 获取数据,
   /// 可以避免获取数据阻塞时间过长导致没有及时开启订阅
   /// [ModelState.init] -> [ModelState.active]
+  @override
   Future<EX?> actInitSubscription() async =>
       await actWrapper(() => reqWrapper(() async {
             await onSubscription();
@@ -263,6 +261,7 @@ mixin ModelStateChangeMx<DATA, EX> on ModelSidecar<DATA, EX> {
   /// 关闭订阅并重置数据
   /// 先 关闭订阅; 后 清理缓存状态
   /// ![ModelState.init]   -> [ModelState.init]
+  @override
   Future<EX?> actCloseReset() async =>
       await actWrapper(() => reqWrapper(() async {
             await onCloseSubs();
@@ -272,6 +271,7 @@ mixin ModelStateChangeMx<DATA, EX> on ModelSidecar<DATA, EX> {
 
   /// 开启状态订阅 (持续刷新数据,保持充血)
   /// ![ModelState.active] -> [ModelState.active]
+  @override
   Future<EX?> actSubscription() async =>
       await actWrapper(() => reqWrapper(() async {
             await onSubscription();
@@ -280,6 +280,7 @@ mixin ModelStateChangeMx<DATA, EX> on ModelSidecar<DATA, EX> {
 
   /// 关闭状态订阅 (停止刷新数据,但保持充血)
   /// [ModelState.active]  -> [ModelState.done]
+  @override
   Future<EX?> actUnsubscribe() async =>
       await actWrapper(() => reqWrapper(() async {
             await onCloseSubs();
@@ -289,6 +290,7 @@ mixin ModelStateChangeMx<DATA, EX> on ModelSidecar<DATA, EX> {
   /// (全量)刷新状态 (单次刷新数据,保持充血)
   /// 先 清理缓存状态; 后 获取状态数据
   ///  any                  -> [ModelState.done]
+  @override
   Future<EX?> actRefresh({bool isActive = false}) async =>
       await actWrapper(() => reqWrapper(() async {
             await onReset();

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:provider_sidecar/provider_sidecar.dart';
 
 import 'mx/mx.dart';
 
@@ -34,78 +35,35 @@ enum ModelState {
 /// 2. 新建DTO 属性, 作为核心数据(核心状态)
 /// 3. 新建与DTO业务逻辑相关的实体类的[ModelStateChangeMx] Mixin, 集中管理状态刷新方法
 ///     根据需要覆写订阅和刷新方法
-/// 4.
 
 ///
 /// 对ChangeNotifier进行包装
 /// [EX] 抛出的异常类型, 便于UI代码展示错误信息
 /// [DATA] 核心贫血数据类, 一般用DTO
-abstract class ModelSidecar<DATA, EX> extends ChangeNotifier with LoggerMx {
+abstract class ModelSidecar<DATA, EX> extends Sidecar<ModelState, EX> {
   /// 0.1 `构造方法`
-  final EX Function(dynamic e, StackTrace s)? onCatch;
-
   // 配置默认的初始化状态 可以省略`setUninitialized`方法
   ModelSidecar.build({
     required this.data,
-    this.state = ModelState.init,
-    this.msg = 'Init with Constructor',
-    this.onCatch,
-  });
+    ModelState state = ModelState.init,
+    String msg = 'Init with Constructor',
+    EX Function(dynamic e, StackTrace s)? onCatch,
+  }) : super(state: state, msg: msg, onCatch: onCatch);
 
   ModelSidecar(
     this.data,
-    this.onCatch, {
-    this.state = ModelState.init,
-    this.msg = 'Init with Constructor',
-  });
+    EX Function(dynamic e, StackTrace s)? onCatch, {
+    ModelState state = ModelState.init,
+    String msg = 'Init with Constructor',
+  }) : super(state: state, msg: msg, onCatch: onCatch);
 
   /// 0.2 配置核心`数据`(推荐直接使用DTO,或Entity)
   DATA data;
-  ModelState state;
-  String msg;
 
   /// 查看当前Model是否处于贫血状态
   bool get isAnemic => state == ModelState.init;
 
   bool get isRich => !isAnemic;
-
-  // 预定义方法: 更新[data]
-  // [silence] false表示调用后立即setState; true一般用于在 [onFetch]中调用
-  // [state] 取两种状态,
-  //   [ModelState.active],表示通过Realtime刷新;
-  //   [ModelState.done],表示通过REST刷新
-  /// [data] 一般来自DTO, 一个[data]只对应一个[ModelSidecar]
-  /// 如果[data]刷新,则应当新建一个[ModelSidecar],替换原有的.
-  /// 而不是调用原[ModelSidecar]的[updateData]
-  ///   以FamilyModel为例, 其子状态PersonModel的核心数据可以仅仅只是一个 personId
-  ///     如果 personId变更,
-  ///     则其对应的PersonModel应当随之销毁,重新建立PersonModel进行替换
-  /// 如果遇到必须调用[updateData]的情况, 则很可能是因为设计有问题. 如缺少上层状态等
-  ///   以UserModel为例,如果要恢复登录用户的状态,
-  ///     则应当添加上层状态AppStateModel,用于管理UserModel,而不是在内部调用[updateData]
-  @Deprecated('避免调用本方法! data一般不单独变更,应当与Model一一对应')
-  @mustCallSuper
-  DATA updateData(
-    DATA data, {
-    bool silence = false,
-    ModelState state = ModelState.active,
-    String msg = '刷新数据',
-  }) {
-    this.data = data;
-    if (!silence) _setState(state, msg);
-    return data;
-  }
-
-  /// 统一处理异常
-  Future<EX?> actWrapper([Function? action]) async {
-    try {
-      await action?.call();
-    } catch (e, s) {
-      log('actWrapper# $e,$s');
-      return onCatch?.call(e, s);
-    }
-    return null;
-  }
 
   /// 处理前置触发条件, 防抖节流等
   /// 可选条件参数最多使用1个, 如果使用多个,则只有首个非空参数逻辑生效
@@ -139,36 +97,24 @@ abstract class ModelSidecar<DATA, EX> extends ChangeNotifier with LoggerMx {
   /// 0.3 配置 `setXxx`方法
   /// set ----------------------------------------------------------------------
 
-  T? _setState<T>(ModelState state, String m, {T? Function()? before}) {
-    log("_setState# ${state.name}, $m");
-    if (m != msg || state != this.state || before != null) {
-      final r = before?.call();
-      this.state = state;
-      msg = m;
-      notifyListeners();
-      return r;
-    }
-    return null;
-  }
-
   T? setInit<T>([String m = "初始状态", T Function()? before]) =>
-      _setState(ModelState.init, m, before: before);
+      setState(ModelState.init, m, before: before);
 
   T? setActive<T>([String m = "刷新状态...", T Function()? before]) =>
-      _setState(ModelState.active, m, before: before);
+      setState(ModelState.active, m, before: before);
 
   T? setDone<T>([
     String m = "完成刷新",
     T? Function()? before,
     bool changeState = true,
   ]) =>
-      _setState(changeState ? ModelState.done : state, m,
+      setState(changeState ? ModelState.done : state, m,
           before: () => before?.call());
 
   /// 如果当前状态已经是 [ModelState.done] || [ModelState.active]
   /// 则保持该状态,否则将设为 [ModelState.done]
   T? setDoneKeepState<T>([String m = "完成刷新", T? Function()? before]) =>
-      _setState(
+      setState(
           (state == ModelState.done || state == ModelState.active)
               ? state
               : ModelState.done,
@@ -177,6 +123,32 @@ abstract class ModelSidecar<DATA, EX> extends ChangeNotifier with LoggerMx {
 
   /// Deprecated 方法
   /// ----------------------------------------------------------------------
+  // 预定义方法: 更新[data]
+  // [silence] false表示调用后立即setState; true一般用于在 [onFetch]中调用
+  // [state] 取两种状态,
+  //   [ModelState.active],表示通过Realtime刷新;
+  //   [ModelState.done],表示通过REST刷新
+  /// [data] 一般来自DTO, 一个[data]只对应一个[ModelSidecar]
+  /// 如果[data]刷新,则应当新建一个[ModelSidecar],替换原有的.
+  /// 而不是调用原[ModelSidecar]的[updateData]
+  ///   以FamilyModel为例, 其子状态PersonModel的核心数据可以仅仅只是一个 personId
+  ///     如果 personId变更,
+  ///     则其对应的PersonModel应当随之销毁,重新建立PersonModel进行替换
+  /// 如果遇到必须调用[updateData]的情况, 则很可能是因为设计有问题. 如缺少上层状态等
+  ///   以UserModel为例,如果要恢复登录用户的状态,
+  ///     则应当添加上层状态AppStateModel,用于管理UserModel,而不是在内部调用[updateData]
+  @Deprecated('避免调用本方法! data一般不单独变更,应当与Model一一对应')
+  @mustCallSuper
+  DATA updateData(
+    DATA data, {
+    bool silence = false,
+    ModelState state = ModelState.active,
+    String msg = '刷新数据',
+  }) {
+    this.data = data;
+    if (!silence) setState(state, msg);
+    return data;
+  }
 
   @Deprecated('setInit')
   T? setUninitialized<T>([String m = "初始状态", T Function()? before]) =>

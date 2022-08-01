@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import 'mx/mx.dart';
+
 ///
 /// [ModelSidecar]使用指南
 
@@ -38,40 +40,7 @@ enum ModelState {
 /// 对ChangeNotifier进行包装
 /// [EX] 抛出的异常类型, 便于UI代码展示错误信息
 /// [DATA] 核心贫血数据类, 一般用DTO
-abstract class ModelSidecar<DATA, EX> extends ChangeNotifier {
-  // 打印 info日志
-  static Function(Object? message, [Object? error, StackTrace? stackTrace])?
-      _lInfo;
-
-  // 打印 shot日志
-  static Function(Object? message, [Object? error, StackTrace? stackTrace])?
-      _lShot;
-
-  static setLogger(
-          Function(Object? message, [Object? error, StackTrace? stackTrace])
-              log) =>
-      _lInfo = log;
-
-  static void setShotLogger(
-          Function(Object? message, [Object? error, StackTrace? stackTrace])
-              log) =>
-      _lShot = log;
-
-  /// 默认Info日志
-  log(Object? message, [Object? error, StackTrace? stackTrace]) =>
-      lgInfo(message, error: error, stackTrace: stackTrace);
-
-  /// 打印 info级别日志
-  lgInfo(Object? message, {Object? error, StackTrace? stackTrace}) =>
-      _lInfo?.call("[$runtimeType]::$message", error, stackTrace);
-
-  /// 打印 shot级别日志,同时附带[StackTrace]
-  lgShot(Object? message, [Object? error, StackTrace? stackTrace]) =>
-      (_lShot ?? _lInfo)?.call(
-          "#[$runtimeType]::$message\n${StackTrace.current}",
-          error,
-          stackTrace);
-
+abstract class ModelSidecar<DATA, EX> extends ChangeNotifier with LoggerMx {
   /// 0.1 `构造方法`
   final EX Function(dynamic e, StackTrace s)? onCatch;
 
@@ -208,8 +177,6 @@ abstract class ModelSidecar<DATA, EX> extends ChangeNotifier {
 
   /// Deprecated 方法
   /// ----------------------------------------------------------------------
-  @Deprecated("_lInfo")
-  get _l => _lInfo;
 
   @Deprecated('setInit')
   T? setUninitialized<T>([String m = "初始状态", T Function()? before]) =>

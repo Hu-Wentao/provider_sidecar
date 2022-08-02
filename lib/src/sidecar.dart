@@ -122,7 +122,7 @@ import 'package:provider_sidecar/provider_sidecar.dart';
 ///
 /// 对ChangeNotifier进行包装
 /// EX 抛出的异常类型, 便于UI代码展示错误信息
-abstract class Sidecar<S, EX> extends ChangeNotifier with LoggerMx {
+abstract class Sidecar<S, EX> extends ChangeNotifier with SidecarLoggerMx {
   /// 0.1 `构造方法`
   final EX Function(dynamic e, StackTrace s)? onCatch;
 

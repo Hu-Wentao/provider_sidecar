@@ -1,6 +1,6 @@
 part of 'mx.dart';
 
-mixin LoggerMx {
+mixin SidecarLoggerMx {
   // 打印 info日志
   static Function(Object? message, [Object? error, StackTrace? stackTrace])?
       _lInfo;

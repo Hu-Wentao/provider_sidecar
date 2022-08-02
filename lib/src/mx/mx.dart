@@ -1,1 +1,1 @@
-part 'logger_mx.dart';
+part 'sidecar_logger_mx.dart';

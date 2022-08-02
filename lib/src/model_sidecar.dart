@@ -240,6 +240,12 @@ abstract class ModelSidecar<DATA, EX> extends Sidecar<ModelState, EX> {
   @Deprecated('setDone')
   T? setInitialized<T>([String m = "完成刷新", T Function()? before]) =>
       setDone(m, before);
+
+  @Deprecated('SidecarLoggerMx.setLogger')
+  static get setLogger => SidecarLoggerMx.setLogger;
+
+  @Deprecated('SidecarLoggerMx.setShotLogger')
+  static get setShotLogger => SidecarLoggerMx.setShotLogger;
 }
 
 ///
@@ -331,10 +337,4 @@ mixin ModelStateChangeMx<DATA, EX> on ModelSidecar<DATA, EX> {
   Future<EX?> actFetch({bool isActive = false}) =>
       actRefresh(isActive: isActive);
 
-  /// == deprecated ==
-  @Deprecated('SidecarLoggerMx.setLogger')
-  static get setLogger => SidecarLoggerMx.setLogger;
-
-  @Deprecated('SidecarLoggerMx.setShotLogger')
-  static get setShotLogger => SidecarLoggerMx.setShotLogger;
 }

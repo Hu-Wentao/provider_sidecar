@@ -330,4 +330,11 @@ mixin ModelStateChangeMx<DATA, EX> on ModelSidecar<DATA, EX> {
   @Deprecated('actRefresh')
   Future<EX?> actFetch({bool isActive = false}) =>
       actRefresh(isActive: isActive);
+
+  /// == deprecated ==
+  @Deprecated('SidecarLoggerMx.setLogger')
+  static get setLogger => SidecarLoggerMx.setLogger;
+
+  @Deprecated('SidecarLoggerMx.setShotLogger')
+  static get setShotLogger => SidecarLoggerMx.setShotLogger;
 }

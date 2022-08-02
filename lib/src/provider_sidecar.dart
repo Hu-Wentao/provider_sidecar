@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:provider_sidecar/src/mx/mx.dart';
 
 import 'sidecar.dart';
 
@@ -198,4 +199,8 @@ abstract class ProviderSidecar<EX> extends Sidecar<SidecarState, EX> {
   /// 完成后需要手动调用 [setInitialized]
   @protected
   onInitializing();
+
+  /// == deprecated ==
+  @Deprecated('SidecarLoggerMx.setLogger')
+  static get setLogger => SidecarLoggerMx.setLogger;
 }

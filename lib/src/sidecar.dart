@@ -142,7 +142,7 @@ abstract class Sidecar<S, EX> extends ChangeNotifier with SidecarLoggerMx {
     try {
       await action?.call();
     } catch (e, s) {
-      log('actWrapper# $e,$s');
+      log('actWrapper# \n$e,\n$s');
       return onCatch?.call(e, s);
     }
     return null;

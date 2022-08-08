@@ -230,8 +230,15 @@ mixin StateChangeMx<DATA, EX> on ModelSidecar<DATA, EX> {
   Future<bool?> onCloseSubs() async => false;
 
   /// 获取状态数据 (全量拉取数据)
-  /// 对于 数据: 设为null或clear()
-  /// 对于 子状态[ModelSidecar] : 根据需要,调用 [actInitSubscription]
+  /// 对于 数据: 直接替换值
+  /// 对于 子状态[ModelSidecar] :
+  ///  A：与操作数据一样，直接替换原Model（可能会导致原Model不会及时关闭监听）
+  ///  B：（推荐）
+  ///   1. 调用原Model的[actUnsubscribe] / [actCloseReset]方法关闭监听
+  ///   2. 替换Model变量
+  ///   3. 根据需要, 调用 [actInitSubscription] 初始化子状态
+  ///
+  /// 可以根据需要在本方法内调用 [setDone]等方法。当然，在onFetch结束后也会自动调用[setState]；
   Future<bool?> onFetch({bool isActive = false});
 
   /// 清理缓存数据 (清理数据)

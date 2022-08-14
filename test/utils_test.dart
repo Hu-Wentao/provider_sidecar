@@ -13,4 +13,11 @@ main() {
   test("selectLineAt", () {
     expect(selectLineAt(src, 1), target);
   });
+
+  test("parentLineBy", () {
+    const trace = src;
+    final index = findLineIndexBy(trace, '.reqWrapper');
+    final r = index == null ? null : selectLineAt(trace, index + 1);
+    expect(r, target);
+  });
 }

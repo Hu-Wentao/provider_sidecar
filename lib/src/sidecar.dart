@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:provider_sidecar/provider_sidecar.dart';
+import 'package:provider_sidecar/src/utils.dart';
 
 /// 使用指南
 /// 0. 创建类与依赖注入
@@ -142,7 +143,7 @@ abstract class Sidecar<S, EX> extends ChangeNotifier with SidecarLoggerMx {
     try {
       await action?.call();
     } catch (e, s) {
-      log('actWrapper# [${e.runtimeType} ${e.hashCode}]\n$e,\n$s');
+      log('actWrapper.catch# [${e.runtimeType}] ${StackTrace.current.parentLineBy('.actWrapper')} \n$e,\n$s');
       return onCatch?.call(e, s);
     }
     return null;

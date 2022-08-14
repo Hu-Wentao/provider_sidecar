@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:provider_sidecar/provider_sidecar.dart';
+import 'package:provider_sidecar/src/utils.dart';
 
 ///
 /// [ModelSidecar]使用指南
@@ -31,7 +32,7 @@ enum ModelState {
 /// 在设计上推荐使用mixin 拆分功能
 /// 1. 建立抽象类, 继承自[ModelSidecar]
 /// 2. 新建DTO 属性, 作为核心数据(核心状态)
-/// 3. 新建与DTO业务逻辑相关的实体类的[ModelStateChangeMx] Mixin, 集中管理状态刷新方法
+/// 3. 新建与DTO业务逻辑相关的实体类的[StateChangeMx] Mixin, 集中管理状态刷新方法
 ///     根据需要覆写订阅和刷新方法
 
 ///
@@ -87,7 +88,7 @@ abstract class ModelSidecar<DATA, EX> extends Sidecar<ModelState, EX> {
     if (accessed) {
       return onAccess.call();
     } else {
-      log("reqWrapper#已拒绝请求#状态[$state],[$msg]");
+      log("reqWrapper.reject#[$state],[$msg] \n\t${StackTrace.current.parentLineBy('.reqWrapper')}");
       return onReject?.call();
     }
   }
@@ -178,9 +179,9 @@ mixin StateChangeMx<DATA, EX> on ModelSidecar<DATA, EX> {
       await actWrapper(() => reqWrapper(() async {
             final active = await onSubscription() ?? true;
             await onSubscription();
-            await onFetch(isActive: active);
+            final fetch = await onFetch(isActive: active);
             setState(state = active ? ModelState.active : ModelState.done,
-                "已完成 状态初始化(开订阅[$active]+获取)");
+                "已完成 状态初始化(开订阅[$active]+获取[$fetch])");
           }, accWhen: () => state == ModelState.init));
 
   /// 关闭订阅并重置数据
@@ -188,9 +189,9 @@ mixin StateChangeMx<DATA, EX> on ModelSidecar<DATA, EX> {
   /// ![ModelState.init]   -> [ModelState.init]
   Future<EX?> actCloseReset() async =>
       await actWrapper(() => reqWrapper(() async {
-            await onCloseSubs();
-            await onReset();
-            setInit("已关闭重置为初始状态(关订阅+清理)");
+            final close = await onCloseSubs();
+            final reset = await onReset();
+            setInit("已关闭重置为初始状态(关订阅[$close]+清理[$reset])");
           }, accWhen: () => state != ModelState.init));
 
   /// 开启状态订阅 (持续刷新数据,保持充血)
@@ -209,8 +210,8 @@ mixin StateChangeMx<DATA, EX> on ModelSidecar<DATA, EX> {
   /// [ModelState.active]  -> [ModelState.done]
   Future<EX?> actUnsubscribe() async =>
       await actWrapper(() => reqWrapper(() async {
-            await onCloseSubs();
-            setDone("已关闭状态订阅(关订阅)");
+            final close = await onCloseSubs();
+            setDone("已关闭状态订阅(关订阅[$close])");
           }, accWhen: () => state == ModelState.active));
 
   /// (全量)刷新状态 (单次刷新数据,保持充血)
@@ -218,9 +219,9 @@ mixin StateChangeMx<DATA, EX> on ModelSidecar<DATA, EX> {
   ///  any                  -> [ModelState.done]
   Future<EX?> actRefresh({bool isActive = false}) async =>
       await actWrapper(() => reqWrapper(() async {
-            await onReset();
-            await onFetch(isActive: isActive);
-            setActive("已完成 状态刷新(清理+获取)");
+            final reset = await onReset();
+            final fetch = await onFetch(isActive: isActive);
+            setActive("已完成 状态刷新(清理[$reset]+获取[$fetch])");
           }));
 
   /// 开启订阅流 (增量刷新数据)

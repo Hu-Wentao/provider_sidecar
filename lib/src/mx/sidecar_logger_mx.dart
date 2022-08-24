@@ -30,7 +30,7 @@ mixin SidecarLoggerMx {
   /// 打印 shot级别日志,同时附带[StackTrace]
   lgShot(Object? message, [Object? error, StackTrace? stackTrace]) =>
       (_lShot ?? _lInfo)?.call(
-          "#[$runtimeType]::$message\n${StackTrace.current}",
+          "#[$runtimeType]::${StackTrace.current.lineAt(1)}\n$message",
           error,
           stackTrace);
 

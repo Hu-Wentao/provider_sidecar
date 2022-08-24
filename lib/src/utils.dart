@@ -16,7 +16,7 @@ int? findLineIndexBy(String trace, String content) {
 }
 
 extension StaceTraceX on StackTrace {
-  String? lineAt(int line) => selectLineAt(toString(), line);
+  String? lineAt([int line = 0]) => selectLineAt(toString(), line);
 
   int? lineIndexBy(String content) => findLineIndexBy(toString(), content);
 

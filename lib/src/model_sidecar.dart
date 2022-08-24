@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:provider_sidecar/provider_sidecar.dart';
-import 'package:provider_sidecar/src/utils.dart';
 
 ///
 /// [ModelSidecar]使用指南

@@ -180,7 +180,7 @@ mixin StateChangeMx<DATA, EX> on ModelSidecar<DATA, EX> {
             await onSubscription();
             final fetch = await onFetch(isActive: active);
             setState(state = active ? ModelState.active : ModelState.done,
-                "已完成 状态初始化(开订阅[$active]+获取[$fetch])");
+                "(开订阅[$active]+获取[$fetch])");
           }, accWhen: () => state == ModelState.init));
 
   /// 关闭订阅并重置数据
@@ -190,7 +190,7 @@ mixin StateChangeMx<DATA, EX> on ModelSidecar<DATA, EX> {
       await actWrapper(() => reqWrapper(() async {
             final close = await onCloseSubs();
             final reset = await onReset();
-            setInit("已关闭重置为初始状态(关订阅[$close]+清理[$reset])");
+            setInit("(关订阅[$close]+清理[$reset])");
           }, accWhen: () => state != ModelState.init));
 
   /// 开启状态订阅 (持续刷新数据,保持充血)
@@ -199,7 +199,7 @@ mixin StateChangeMx<DATA, EX> on ModelSidecar<DATA, EX> {
       await actWrapper(() => reqWrapper(() async {
             final active = await onSubscription() ?? true;
             if (active) {
-              setActive("已开始状态订阅(开订阅[$active])");
+              setActive("(开订阅[$active])");
             } else {
               setState(state, '订阅开启失败，尚未覆写actSubscription方法');
             }
@@ -210,7 +210,7 @@ mixin StateChangeMx<DATA, EX> on ModelSidecar<DATA, EX> {
   Future<EX?> actUnsubscribe() async =>
       await actWrapper(() => reqWrapper(() async {
             final close = await onCloseSubs();
-            setDone("已关闭状态订阅(关订阅[$close])");
+            setDone("(关订阅[$close])");
           }, accWhen: () => state == ModelState.active));
 
   /// (全量)刷新状态 (单次刷新数据,保持充血)
@@ -220,7 +220,7 @@ mixin StateChangeMx<DATA, EX> on ModelSidecar<DATA, EX> {
       await actWrapper(() => reqWrapper(() async {
             final reset = await onReset();
             final fetch = await onFetch(isActive: isActive);
-            setActive("已完成 状态刷新(清理[$reset]+获取[$fetch])");
+            setActive("(清理[$reset]+获取[$fetch])");
           }));
 
   /// 开启订阅流 (增量刷新数据)

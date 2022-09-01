@@ -152,7 +152,7 @@ abstract class Sidecar<S, EX> extends ChangeNotifier with SidecarLoggerMx {
   /// 0.3 配置 `setXxx`方法
   /// set ----------------------------------------------------------------------
   T? setState<T>(S state, String m, {T? Function()? before}) {
-    log("setState#${StackTrace.current.lineAt(1)?.replaceAll(RegExp(r"^.+\("), r"(")}\t# $state, $m");
+    log("$state||${StackTrace.current.lineAt(1)?.replaceAll(RegExp(r"^.+\("), r"")}# $m");
     if (m != msg || state != this.state || before != null) {
       final r = before?.call();
       this.state = state;

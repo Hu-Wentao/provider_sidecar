@@ -173,13 +173,13 @@ abstract class ProviderSidecar<EX> extends Sidecar<SidecarState, EX> {
   /// 0.3 配置 `setXxx`方法
   /// set ----------------------------------------------------------------------
   T? setUninitialized<T>([String m = "未初始化", T Function()? before]) =>
-      setState(SidecarState.uninitialized, m, before: before);
+      setState(SidecarState.uninitialized, m, before: before, traceLine: 2);
 
   T? setInitializing<T>([String m = "初始化...", T Function()? before]) =>
-      setState(SidecarState.initializing, m, before: before);
+      setState(SidecarState.initializing, m, before: before, traceLine: 2);
 
   T? setInitialized<T>([String m = "初始化完成", T Function()? before]) =>
-      setState(SidecarState.initialized, m, before: before);
+      setState(SidecarState.initialized, m, before: before, traceLine: 2);
 
   /// 0.4 配置 `actXxx`方法
   /// act ----------------------------------------------------------------------

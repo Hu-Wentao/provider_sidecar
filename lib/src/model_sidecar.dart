@@ -96,10 +96,10 @@ abstract class ModelSidecar<DATA, EX> extends Sidecar<ModelState, EX> {
   /// set ----------------------------------------------------------------------
 
   T? setInit<T>([String m = "初始状态", T Function()? before]) =>
-      setState(ModelState.init, m, before: before);
+      setState(ModelState.init, m, before: before, traceLine: 2);
 
   T? setActive<T>([String m = "刷新状态...", T Function()? before]) =>
-      setState(ModelState.active, m, before: before);
+      setState(ModelState.active, m, before: before, traceLine: 2);
 
   T? setDone<T>([
     String m = "完成刷新",
@@ -107,7 +107,7 @@ abstract class ModelSidecar<DATA, EX> extends Sidecar<ModelState, EX> {
     bool changeState = true,
   ]) =>
       setState(changeState ? ModelState.done : state, m,
-          before: () => before?.call());
+          before: () => before?.call(), traceLine: 2);
 
   /// 如果当前状态已经是 [ModelState.done] || [ModelState.active]
   /// 则保持该状态,否则将设为 [ModelState.done]
@@ -117,7 +117,8 @@ abstract class ModelSidecar<DATA, EX> extends Sidecar<ModelState, EX> {
               ? state
               : ModelState.done,
           m,
-          before: () => before?.call());
+          before: () => before?.call(),
+          traceLine: 2);
 
   /// Deprecated 方法
   /// ----------------------------------------------------------------------

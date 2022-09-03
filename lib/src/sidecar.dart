@@ -150,9 +150,18 @@ abstract class Sidecar<S, EX> extends ChangeNotifier with SidecarLoggerMx {
   }
 
   /// 0.3 配置 `setXxx`方法
+  /// [before] 在配置状态以及[notifyListeners] 之前所执行的方法.
+  /// [traceLine] 默认 1，将打印 [setState]方法所在的代码行
+  ///   如果代码对[setState]进行过包装，则应当将该值配置为 2或更高
+  ///   如果不希望打印[StackTrace]信息,则配置为 -1
   /// set ----------------------------------------------------------------------
-  T? setState<T>(S state, String m, {T? Function()? before}) {
-    log("$state||${StackTrace.current.lineAt(1)?.replaceAll(RegExp(r"^.+\("), r"")}# $m");
+  T? setState<T>(
+    S state,
+    String m, {
+    T? Function()? before,
+    int traceLine = 1,
+  }) {
+    log("$state||${(traceLine > -1) ? StackTrace.current.lineAt(traceLine)?.replaceAll(RegExp(r"^.+\("), r"") : ''}# $m");
     if (m != msg || state != this.state || before != null) {
       final r = before?.call();
       this.state = state;

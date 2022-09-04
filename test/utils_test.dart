@@ -20,4 +20,11 @@ main() {
     final r = index == null ? null : selectLineAt(trace, index + 1);
     expect(r, target);
   });
+
+  test("onlyStack", () {
+    const traceLine =
+        "StateChangeMx.actInitSubscription.<anonymous closure>.<anonymous closure> (package:provider_sidecar/src/model_sidecar.dart:182:13)";
+    final r3 = onlyStack(traceLine);
+    expect(r3, 'package:provider_sidecar/src/model_sidecar.dart:182:13');
+  });
 }

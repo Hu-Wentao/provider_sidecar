@@ -15,14 +15,26 @@ int? findLineIndexBy(String trace, String content) {
   return r == null ? null : int.tryParse(r);
 }
 
+/// 只保留位置信息
+String onlyStack(String traceLine) {
+  return traceLine.replaceAllMapped(RegExp(r"^.+\((package:.+\d)\)"), (m)=>'${m.group(1)}');
+}
+
 extension StaceTraceX on StackTrace {
-  String? lineAt([int line = 0]) => selectLineAt(toString(), line);
+  String? lineAt([int line = 0, bool trim = true]) {
+    final l = selectLineAt(toString(), line);
+    if (l == null) return null;
+    return trim ? onlyStack(l) : l;
+  }
 
   int? lineIndexBy(String content) => findLineIndexBy(toString(), content);
 
-  String? parentLineBy(String content) {
+  String? parentLineBy(String content, {bool trim = true}) {
     final trace = StackTrace.current.toString();
     final index = findLineIndexBy(trace, content);
-    return index == null ? null : selectLineAt(trace, index + 1);
+    if (index == null) return null;
+    final l = selectLineAt(trace, index + 1);
+    if (l == null) return null;
+    return trim ? onlyStack(l) : l;
   }
 }

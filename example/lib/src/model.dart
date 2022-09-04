@@ -79,7 +79,8 @@ class FamilyModel extends ModelSidecar<Family, dynamic>
 class PersonModel extends ModelSidecar<Person, dynamic> {
   PersonModel(Person data) : super(data, _onCatchError);
 
-  Future<void> actDoSthError() async => await actWrapper(() {
+  // 返回值类型即 可空的抛出的异常类型，本例中，异常类型为dynamic，所以也返回dynamic
+  Future<dynamic> actDoSthError() async => await actWrapper(() {
         throw "do sth error !";
       });
 }

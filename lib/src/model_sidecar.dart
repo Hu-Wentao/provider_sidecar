@@ -95,30 +95,43 @@ abstract class ModelSidecar<DATA, EX> extends Sidecar<ModelState, EX> {
   /// 0.3 配置 `setXxx`方法
   /// set ----------------------------------------------------------------------
 
-  T? setInit<T>([String m = "初始状态", T Function()? before]) =>
-      setState(ModelState.init, m, before: before, traceLine: 2);
+  T? setInit<T>([
+    String m = "初始状态",
+    T Function()? before,
+    int traceLine = 2,
+  ]) =>
+      setState(ModelState.init, m, before: before, traceLine: traceLine);
 
-  T? setActive<T>([String m = "刷新状态...", T Function()? before]) =>
-      setState(ModelState.active, m, before: before, traceLine: 2);
+  T? setActive<T>([
+    String m = "刷新状态...",
+    T Function()? before,
+    int traceLine = 2,
+  ]) =>
+      setState(ModelState.active, m, before: before, traceLine: traceLine);
 
   T? setDone<T>([
     String m = "完成刷新",
     T? Function()? before,
     bool changeState = true,
+    int traceLine = 2,
   ]) =>
       setState(changeState ? ModelState.done : state, m,
-          before: () => before?.call(), traceLine: 2);
+          before: () => before?.call(), traceLine: traceLine);
 
   /// 如果当前状态已经是 [ModelState.done] || [ModelState.active]
   /// 则保持该状态,否则将设为 [ModelState.done]
-  T? setDoneKeepState<T>([String m = "完成刷新", T? Function()? before]) =>
+  T? setDoneKeepState<T>([
+    String m = "完成刷新",
+    T? Function()? before,
+    int traceLine = 2,
+  ]) =>
       setState(
           (state == ModelState.done || state == ModelState.active)
               ? state
               : ModelState.done,
           m,
           before: () => before?.call(),
-          traceLine: 2);
+          traceLine: traceLine);
 
   /// Deprecated 方法
   /// ----------------------------------------------------------------------
@@ -151,15 +164,15 @@ abstract class ModelSidecar<DATA, EX> extends Sidecar<ModelState, EX> {
 
   @Deprecated('setInit')
   T? setUninitialized<T>([String m = "初始状态", T Function()? before]) =>
-      setInit(m, before);
+      setInit(m, before, 3);
 
   @Deprecated('setRefresh')
   T? setInitializing<T>([String m = "刷新状态...", T Function()? before]) =>
-      setActive(m, before);
+      setActive(m, before, 3);
 
   @Deprecated('setDone')
   T? setInitialized<T>([String m = "完成刷新", T Function()? before]) =>
-      setDone(m, before);
+      setDone(m, before, true, 3);
 
   @Deprecated('SidecarLoggerMx.setLogger')
   static get setLogger => SidecarLoggerMx.setLogger;
@@ -180,8 +193,7 @@ mixin StateChangeMx<DATA, EX> on ModelSidecar<DATA, EX> {
             final active = await onSubscription() ?? true;
             await onSubscription();
             final fetch = await onFetch(isActive: active);
-            setState(state = active ? ModelState.active : ModelState.done,
-                "(开订阅[$active]+获取[$fetch])");
+            setDoneKeepState("(开订阅[$active]+获取[$fetch])");
           }, accWhen: () => state == ModelState.init));
 
   /// 关闭订阅并重置数据

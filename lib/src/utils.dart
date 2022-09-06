@@ -10,15 +10,13 @@ String? selectLineAt(String trace, int lineIndex) {
 /// 返回[StackTrace]包含特定内容[$name]的行号
 int? findLineIndexBy(String trace, String content) {
   final reg = RegExp(r'#(\d+)\s*.*' "$content" r'.*\n');
-  final m = reg.allMatches(trace).first;
-  final r = m.group(1);
-  return r == null ? null : int.tryParse(r);
+  final m = reg.allMatches(trace);
+  return m.isEmpty ? null : int.tryParse(m.first.group(1) ?? '0');
 }
 
 /// 只保留位置信息
-String onlyStack(String traceLine) {
-  return traceLine.replaceAllMapped(RegExp(r"^.+\((package:.+\d)\)"), (m)=>'${m.group(1)}');
-}
+String onlyStack(String traceLine) => traceLine.replaceAllMapped(
+    RegExp(r"^.+\((package:.+\d)\)"), (m) => '${m.group(1)}');
 
 extension StaceTraceX on StackTrace {
   String? lineAt([int line = 0, bool trim = true]) {

@@ -2,12 +2,12 @@
 /// 返回[StackTrace]特定行号[lineIndex] #n 的内容
 String? selectLineAt(String trace, int lineIndex) {
   final reg = RegExp("#$lineIndex" r'\s*(.*)\n');
-  final m = reg.allMatches(trace).first;
-  return m.group(1);
+  final m = reg.allMatches(trace);
+  return m.isEmpty ? null : m.first.group(1) ?? '';
 }
 
 ///
-/// 返回[StackTrace]包含特定内容[$name]的行号
+/// 返回[StackTrace]包含特定内容[content]的行号
 int? findLineIndexBy(String trace, String content) {
   final reg = RegExp(r'#(\d+)\s*.*' "$content" r'.*\n');
   final m = reg.allMatches(trace);

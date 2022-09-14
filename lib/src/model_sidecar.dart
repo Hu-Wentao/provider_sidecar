@@ -112,10 +112,10 @@ abstract class ModelSidecar<DATA, EX> extends Sidecar<ModelState, EX> {
   T? setDone<T>([
     String m = "完成刷新",
     T? Function()? before,
-    bool changeState = true,
+    @Deprecated('setState(null，...)即表示沿用原状态') bool changeState = true,
     int traceLine = 2,
   ]) =>
-      setState(changeState ? ModelState.done : state, m,
+      setState(changeState ? ModelState.done : null, m,
           before: () => before?.call(), traceLine: traceLine);
 
   /// 如果当前状态已经是 [ModelState.done] || [ModelState.active]
@@ -193,7 +193,7 @@ mixin StateChangeMx<DATA, EX> on ModelSidecar<DATA, EX> {
             final active = await onSubscription() ?? true;
             await onSubscription();
             final fetch = await onFetch(isActive: active);
-            setDoneKeepState("(开订阅[$active]+获取[$fetch])");
+            setDoneKeepState("(开订阅[$active]+获取[$fetch])", null, 4);
           }, accWhen: () => state == ModelState.init));
 
   /// 关闭订阅并重置数据
@@ -203,7 +203,7 @@ mixin StateChangeMx<DATA, EX> on ModelSidecar<DATA, EX> {
       await actWrapper(() => reqWrapper(() async {
             final close = await onCloseSubs();
             final reset = await onReset();
-            setInit("(关订阅[$close]+清理[$reset])");
+            setInit("(关订阅[$close]+清理[$reset])", null, 3);
           }, accWhen: () => state != ModelState.init));
 
   /// 开启状态订阅 (持续刷新数据,保持充血)
@@ -212,9 +212,9 @@ mixin StateChangeMx<DATA, EX> on ModelSidecar<DATA, EX> {
       await actWrapper(() => reqWrapper(() async {
             final active = await onSubscription() ?? true;
             if (active) {
-              setActive("(开订阅[$active])");
+              setActive("(开订阅[$active])", null, 3);
             } else {
-              setState(state, '订阅开启失败，尚未覆写actSubscription方法');
+              setState(null, '订阅开启失败，未覆写actSubscription方法', traceLine: 3);
             }
           }, accWhen: () => state != ModelState.active));
 
@@ -223,7 +223,7 @@ mixin StateChangeMx<DATA, EX> on ModelSidecar<DATA, EX> {
   Future<EX?> actUnsubscribe() async =>
       await actWrapper(() => reqWrapper(() async {
             final close = await onCloseSubs();
-            setDone("(关订阅[$close])");
+            setDone("(关订阅[$close])", null, true, 3);
           }, accWhen: () => state == ModelState.active));
 
   /// (全量)刷新状态 (单次刷新数据,保持充血)
@@ -233,7 +233,7 @@ mixin StateChangeMx<DATA, EX> on ModelSidecar<DATA, EX> {
       await actWrapper(() => reqWrapper(() async {
             final reset = await onReset();
             final fetch = await onFetch(isActive: isActive);
-            setActive("(清理[$reset]+获取[$fetch])");
+            setActive("(清理[$reset]+获取[$fetch])", null, 3);
           }));
 
   /// 开启订阅流 (增量刷新数据)

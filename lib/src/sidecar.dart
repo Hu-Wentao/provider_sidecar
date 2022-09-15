@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:provider_sidecar/provider_sidecar.dart';
-import 'package:provider_sidecar/src/utils.dart';
 
 /// 使用指南
 /// 0. 创建类与依赖注入

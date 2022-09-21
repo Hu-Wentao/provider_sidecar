@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
+export 'package:provider/provider.dart' hide ChangeNotifierProxyProvider;
 
 class ChangeNotifierProxyProvider<T, R extends ChangeNotifier?>
     extends ListenableProxyProvider<T, R> {

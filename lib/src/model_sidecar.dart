@@ -72,6 +72,7 @@ abstract class ModelSidecar<DATA, EX> extends Sidecar<ModelState, EX> {
     List<ModelState>? rejWhenAny, // state 不能出现在 list 中
     bool Function()? accWhen, // 返回true即通过
     T? Function()? onReject,
+    int traceLine = 3,
   }) {
     // 默认通过
     bool accessed = true;
@@ -87,7 +88,7 @@ abstract class ModelSidecar<DATA, EX> extends Sidecar<ModelState, EX> {
     if (accessed) {
       return onAccess.call();
     } else {
-      log("reqWrapper.reject#[$state],[$msg] \n\t${StackTrace.current.parentLineBy('.reqWrapper')}");
+      log("reqWrapper.reject#[$state],[$msg] \n\t${StackTrace.current.lineAt(traceLine)}");
       return onReject?.call();
     }
   }
@@ -188,53 +189,68 @@ mixin StateChangeMx<DATA, EX> on ModelSidecar<DATA, EX> {
   /// 先 开启订阅; 后 获取数据,
   /// 可以避免获取数据阻塞时间过长导致没有及时开启订阅
   /// [ModelState.init] -> [ModelState.active]
-  Future<EX?> actInitSubscription() async =>
-      await actWrapper(() => reqWrapper(() async {
-            final active = await onSubscription() ?? true;
-            await onSubscription();
-            final fetch = await onFetch(isActive: active);
-            setDoneKeepState("(开订阅[$active]+获取[$fetch])", null, 4);
-          }, accWhen: () => state == ModelState.init));
+  Future<EX?> actInitSubscription() async => await actWrapper(() => reqWrapper(
+        () async {
+          final active = await onSubscription() ?? true;
+          await onSubscription();
+          final fetch = await onFetch(isActive: active);
+          setDoneKeepState("(开订阅[$active]+获取[$fetch])", null, 3);
+        },
+        accWhen: () => state == ModelState.init,
+        traceLine: 4,
+      ));
 
   /// 关闭订阅并重置数据
   /// 先 关闭订阅; 后 清理缓存状态
   /// ![ModelState.init]   -> [ModelState.init]
-  Future<EX?> actCloseReset() async =>
-      await actWrapper(() => reqWrapper(() async {
-            final close = await onCloseSubs();
-            final reset = await onReset();
-            setInit("(关订阅[$close]+清理[$reset])", null, 3);
-          }, accWhen: () => state != ModelState.init));
+  Future<EX?> actCloseReset() async => await actWrapper(() => reqWrapper(
+        () async {
+          final close = await onCloseSubs();
+          final reset = await onReset();
+          setInit("(关订阅[$close]+清理[$reset])", null, 3);
+        },
+        accWhen: () => state != ModelState.init,
+        traceLine: 4,
+      ));
 
   /// 开启状态订阅 (持续刷新数据,保持充血)
   /// ![ModelState.active] -> [ModelState.active]
-  Future<EX?> actSubscription() async =>
-      await actWrapper(() => reqWrapper(() async {
-            final active = await onSubscription() ?? true;
-            if (active) {
-              setActive("(开订阅[$active])", null, 3);
-            } else {
-              setState(null, '订阅开启失败，未覆写actSubscription方法', traceLine: 3);
-            }
-          }, accWhen: () => state != ModelState.active));
+  Future<EX?> actSubscription() async => await actWrapper(() => reqWrapper(
+        () async {
+          final active = await onSubscription() ?? true;
+          if (active) {
+            setActive("(开订阅[$active])", null, 3);
+          } else {
+            setState(null, '订阅开启失败，未覆写actSubscription方法', traceLine: 3);
+          }
+        },
+        accWhen: () => state != ModelState.active,
+        traceLine: 4,
+      ));
 
   /// 关闭状态订阅 (停止刷新数据,但保持充血)
   /// [ModelState.active]  -> [ModelState.done]
-  Future<EX?> actUnsubscribe() async =>
-      await actWrapper(() => reqWrapper(() async {
-            final close = await onCloseSubs();
-            setDone("(关订阅[$close])", null, true, 3);
-          }, accWhen: () => state == ModelState.active));
+  Future<EX?> actUnsubscribe() async => await actWrapper(() => reqWrapper(
+        () async {
+          final close = await onCloseSubs();
+          setDone("(关订阅[$close])", null, true, 3);
+        },
+        accWhen: () => state == ModelState.active,
+        traceLine: 4,
+      ));
 
   /// (全量)刷新状态 (单次刷新数据,保持充血)
   /// 先 清理缓存状态; 后 获取状态数据
   ///  any                  -> [ModelState.done]
   Future<EX?> actRefresh({bool isActive = false}) async =>
-      await actWrapper(() => reqWrapper(() async {
-            final reset = await onReset();
-            final fetch = await onFetch(isActive: isActive);
-            setActive("(清理[$reset]+获取[$fetch])", null, 3);
-          }));
+      await actWrapper(() => reqWrapper(
+            () async {
+              final reset = await onReset();
+              final fetch = await onFetch(isActive: isActive);
+              setActive("(清理[$reset]+获取[$fetch])", null, 3);
+            },
+            traceLine: 4,
+          ));
 
   /// 开启订阅流 (增量刷新数据)
   Future<bool?> onSubscription() async => false;

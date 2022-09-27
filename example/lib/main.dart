@@ -52,11 +52,8 @@ class _MyHomePageState extends State<MyHomePage> {
                       title: Text(e.name),
                       subtitle: Text(e.id),
                       trailing: Text("(${e.families.length} family)"),
-                      onTap: () {
-                        Navigator.push(context, MaterialPageRoute(builder: (c) {
-                          return TownPage(town: e);
-                        }));
-                      },
+                      onTap: () => Navigator.push(context,
+                          MaterialPageRoute(builder: (c) => TownPage(town: e))),
                     ))
                 .toList(),
           ),
@@ -83,17 +80,14 @@ class TownPage extends StatelessWidget {
                             subtitle: Text(fm.data.id),
                             trailing:
                                 Text("(${fm.data.persons.length} person)"),
-                            onTap: () {
-                              Navigator.push(context,
-                                  MaterialPageRoute(builder: (c) {
-                                // m.actInitSubscription();
-                                return ChangeNotifierProvider<
-                                    FamilyModel>.value(
-                                  value: fm..actInitSubscription(),
-                                  child: FamilyPage(family: fm.data),
-                                );
-                              }));
-                            },
+                            onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (c) => ChangeNotifierProvider<
+                                            FamilyModel>.value(
+                                          value: fm..actInitSubscription(),
+                                          child: FamilyPage(family: fm.data),
+                                        ))),
                           ))
                       .toList(),
                 ),
@@ -117,13 +111,13 @@ class FamilyPage extends StatelessWidget {
                   .map((e) => ListTile(
                         title: Text(e.data.name),
                         subtitle: Text(e.data.id),
-                        onTap: () {
-                          Navigator.push(context,
-                              MaterialPageRoute(builder: (c) {
-                            return ChangeNotifierProvider<PersonModel>.value(
-                                value: e, child: PersonPage(person: e.data));
-                          }));
-                        },
+                        onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (c) =>
+                                    ChangeNotifierProvider<PersonModel>.value(
+                                        value: e,
+                                        child: PersonPage(person: e.data)))),
                       ))
                   .toList(),
             ),

@@ -138,11 +138,11 @@ abstract class Sidecar<S, EX> extends ChangeNotifier with SidecarLoggerMx {
   String msg;
 
   /// 统一处理异常
-  Future<EX?> actWrapper([Function? action]) async {
+  Future<EX?> actWrapper([Function? action, int traceLine = 1]) async {
     try {
       await action?.call();
     } catch (e, s) {
-      log('actWrapper.catch# [${e.runtimeType}] ${StackTrace.current.parentLineBy('.actWrapper')} \n$e,\n$s');
+      log('actWrapper.catch# [${e.runtimeType}] ${StackTrace.current.lineAt(traceLine)} \n$e,\n$s');
       return onCatch?.call(e, s);
     }
     return null;

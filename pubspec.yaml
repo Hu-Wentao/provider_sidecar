@@ -11,10 +11,12 @@ dependencies:
   flutter:
     sdk: flutter
   provider:
+  rxdart:
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^1.0.0
-
+#  build_runner:
+#  freezed:
 flutter:

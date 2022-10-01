@@ -14,4 +14,19 @@ mixin ActEntranceMx<ACT, S, EX> on Sidecar<S, EX> {
   EX? onBeforeActEntrance(ACT act) => null;
 
   dynamic onActEntrance(ACT act);
+
+  /// 覆写 [traceLine] 便于定位到[actEntrance]
+  @override
+  setState<T>(
+    S? state,
+    String m, {
+    T? Function()? before,
+    int traceLine = 2,
+  }) =>
+      super.setState<T>(
+        state,
+        m,
+        before: before,
+        traceLine: traceLine,
+      );
 }

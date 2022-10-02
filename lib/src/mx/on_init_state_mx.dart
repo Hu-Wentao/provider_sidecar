@@ -1,15 +1,46 @@
 part of 'mx.dart';
 
-mixin OnInitStateMx<MODEL, PAGE extends StatefulWidget> on State<PAGE> {
+mixin OnInitStateMx<PAGE extends StatefulWidget, A> on State<PAGE> {
   @override
   void initState() {
     Future.microtask(() {
       final msgr = ScaffoldMessenger.of(context);
-      final model = context.read<MODEL>();
-      onInitState(model, msgr);
+      final a = context.read<A>();
+      onInitState(msgr, a);
     });
     super.initState();
   }
 
-  onInitState(MODEL model, ScaffoldMessengerState msgr);
+  onInitState(ScaffoldMessengerState msgr, A a);
+}
+
+mixin OnInitStateMx2<PAGE extends StatefulWidget, A, B> on State<PAGE> {
+  @override
+  void initState() {
+    Future.microtask(() {
+      final msgr = ScaffoldMessenger.of(context);
+      final a = context.read<A>();
+      final b = context.read<B>();
+      onInitState(msgr, a, b);
+    });
+    super.initState();
+  }
+
+  onInitState(ScaffoldMessengerState msgr, A a, B b);
+}
+
+mixin OnInitStateMx3<PAGE extends StatefulWidget, A, B, C> on State<PAGE> {
+  @override
+  void initState() {
+    Future.microtask(() {
+      final msgr = ScaffoldMessenger.of(context);
+      final a = context.read<A>();
+      final b = context.read<B>();
+      final c = context.read<C>();
+      onInitState(msgr, a, b, c);
+    });
+    super.initState();
+  }
+
+  onInitState(ScaffoldMessengerState msgr, A a, B b, C c);
 }

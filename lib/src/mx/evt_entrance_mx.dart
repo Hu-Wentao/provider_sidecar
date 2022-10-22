@@ -4,7 +4,7 @@ part of 'mx.dart';
 /// Evt入口包装
 mixin EvtEntranceMx<EVT> {
   late final StreamController<EVT> _evtCtrl = StreamController<EVT>.broadcast()
-    ..stream.doOnData(onEvent);
+    ..stream.listen(onEvent);
 
   void evtEntrance(EVT evt) => _evtCtrl.add(evt);
 

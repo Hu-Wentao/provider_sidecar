@@ -1,17 +1,25 @@
 part of 'mx.dart';
 
 mixin OnInitStateMx<PAGE extends StatefulWidget, A> on State<PAGE> {
+  StreamSubscription? _onInitStateMxSub;
+
   @override
   void initState() {
     Future.microtask(() {
       final msgr = ScaffoldMessenger.of(context);
       final a = context.read<A>();
-      onInitState(msgr, a);
+      _onInitStateMxSub = onInitState(msgr, a);
     });
     super.initState();
   }
 
-  onInitState(ScaffoldMessengerState msgr, A a);
+  StreamSubscription? onInitState(ScaffoldMessengerState msgr, A a);
+
+  @override
+  dispose() {
+    _onInitStateMxSub?.cancel();
+    super.dispose();
+  }
 }
 
 mixin OnInitStateMx2<PAGE extends StatefulWidget, A, B> on State<PAGE> {

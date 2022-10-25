@@ -192,7 +192,6 @@ mixin StateChangeMx<DATA, EX> on ModelSidecar<DATA, EX> {
   Future<EX?> actInitSubscription() async => await actWrapper(() => reqWrapper(
         () async {
           final active = await onSubscription() ?? true;
-          await onSubscription();
           final fetch = await onFetch(isActive: active);
           setDoneKeepState("(开订阅[$active]+获取[$fetch])", null, 3);
         },

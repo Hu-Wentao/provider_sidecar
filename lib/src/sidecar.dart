@@ -15,7 +15,7 @@ class BaseEvent<S> implements IEvent {
       : debugInfo = DebugInfo.of(msg, lineAt);
 }
 
-abstract class Intent extends IEvent {}
+abstract class Intent implements IEvent {}
 
 ///
 /// [DebugInfo.of]

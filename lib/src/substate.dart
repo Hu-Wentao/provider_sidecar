@@ -1,24 +1,37 @@
-import 'package:provider_sidecar/provider_sidecar.dart';
+import 'dart:async';
 
 /// 子状态字段包装类
-/// <慎用，可能会被移除>
+/// <实验性功能，可能会被移除>
 class SubState<T> {
   SubState({
-    required this.parent,
-    required T field,
+    required T? value,
     this.memo = '',
-  }) : _field = field;
+    this.doOnSet,
+    this.doOnFetch,
+  }) : _value = value;
 
-  final Sidecar parent;
   final String memo;
-  T _field;
+  T? _value;
 
-  setField(T f) {
-    _field = field;
-    parent.setState(null, '更新[$memo]', traceLine: 2);
+  void setValue(T v) {
+    if (_value == v) return;
+    doOnSet?.call(v);
+    _value = v;
   }
 
-  T get field => _field!;
+  T get value => _value!;
 
-  T call() => field;
+  T call() => value;
+
+  Future<T> Function()? doOnFetch;
+  Function(T v)? doOnSet;
+
+  //
+  Future onFetch() async {
+    final r = await doOnFetch?.call();
+    if (r == null) return null;
+    setValue(r);
+  }
+
+  void onReset() => _value = null;
 }

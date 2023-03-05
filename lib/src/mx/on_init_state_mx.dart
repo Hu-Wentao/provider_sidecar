@@ -13,6 +13,7 @@ mixin OnInitStateMx<PAGE extends StatefulWidget, A> on State<PAGE> {
     super.initState();
   }
 
+  /// 如果在方法内调用了 listen方法，则应当return返回值，以便dispose时自动cancel
   StreamSubscription? onInitState(ScaffoldMessengerState msgr, A a);
 
   @override

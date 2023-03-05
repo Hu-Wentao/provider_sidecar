@@ -7,8 +7,6 @@ import 'package:rxdart/rxdart.dart';
 
 part 'sidecar_logger_mx.dart';
 
-part 'act_entrance_mx.dart';
-
 part 'evt_entrance_mx.dart';
 
 part 'on_init_state_mx.dart';

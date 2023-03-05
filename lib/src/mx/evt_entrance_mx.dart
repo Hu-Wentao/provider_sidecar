@@ -2,17 +2,39 @@ part of 'mx.dart';
 
 ///
 /// Evt入口包装
-mixin EvtEntranceMx<EVT> {
-  late final StreamController<EVT> _evtCtrl = StreamController<EVT>.broadcast()
-    ..stream.listen(onEvent);
+mixin EvtEntranceMx<EVT, S> on BaseSidecar<S> {
+  late final PublishSubject<EVT> _subject = PublishSubject<EVT>()
+    ..stream.listen(
+      onEvent,
+      onError: onError,
+    );
 
-  @Deprecated("add")
-  void evtEntrance(EVT evt) => add(evt);
+  // /// 覆写 [traceLine] 便于定位到[actEntrance]
+  // /// 一般在 [onEvent]内部调用
+  // @override
+  // setState<T>(
+  //   S? state,
+  //   String m, {
+  //   T? Function()? before,
+  //   int traceLine = 2,
+  // }) =>
+  //     super.setState<T>(
+  //       state,
+  //       m,
+  //       before: before,
+  //       traceLine: traceLine,
+  //     );
 
-  void add(EVT? evt) => (evt == null) ? null : _evtCtrl.add(evt);
+  ///
+  void add(EVT? evt) => (evt == null) ? null : _subject.add(evt);
 
-  Stream<EVT> get events => _evtCtrl.stream;
+  Stream<EVT> get events => _subject.stream;
 
   @mustCallSuper
-  void onEvent(EVT evt) {}
+  FutureOr<void> onEvent(EVT evt);
+
+  @mustCallSuper
+  onError(e, s) {
+    log('actWrapper.catch# [${e.runtimeType}] ${StackTrace.current} \n$e,\n$s');
+  }
 }

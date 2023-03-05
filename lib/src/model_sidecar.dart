@@ -38,6 +38,7 @@ enum ModelState {
 /// 对ChangeNotifier进行包装
 /// [EX] 抛出的异常类型, 便于UI代码展示错误信息
 /// [DATA] 核心贫血数据类, 一般用DTO
+@Deprecated('SidecarProvider')
 abstract class ModelSidecar<DATA, EX> extends Sidecar<ModelState, EX> {
   /// 0.1 `构造方法`
   // 配置默认的初始化状态 可以省略`setUninitialized`方法
@@ -273,83 +274,4 @@ mixin StateChangeMx<DATA, EX> on ModelSidecar<DATA, EX> {
   /// 对于 数据: 设为null或clear()
   /// 对于 子状态[ModelSidecar] : 调用 [actCloseReset]
   Future<bool?> onReset();
-}
-
-@Deprecated('use StateChangeMx')
-mixin ModelStateChangeMx<DATA, EX> on ModelSidecar<DATA, EX> {
-  /// 开启订阅并获取数据
-  /// 先 开启订阅; 后 获取数据,
-  /// 可以避免获取数据阻塞时间过长导致没有及时开启订阅
-  /// [ModelState.init] -> [ModelState.active]
-  Future<EX?> actInitSubscription() async =>
-      await actWrapper(() => reqWrapper(() async {
-            await onSubscription();
-            await onFetch(isActive: true);
-            setActive("已完成 状态初始化(开订阅+获取)");
-          }, accWhen: () => state == ModelState.init));
-
-  /// 关闭订阅并重置数据
-  /// 先 关闭订阅; 后 清理缓存状态
-  /// ![ModelState.init]   -> [ModelState.init]
-  Future<EX?> actCloseReset() async =>
-      await actWrapper(() => reqWrapper(() async {
-            await onCloseSubs();
-            await onReset();
-            setInit("已关闭重置为初始状态(关订阅+清理)");
-          }, accWhen: () => state != ModelState.init));
-
-  /// 开启状态订阅 (持续刷新数据,保持充血)
-  /// ![ModelState.active] -> [ModelState.active]
-  Future<EX?> actSubscription() async =>
-      await actWrapper(() => reqWrapper(() async {
-            await onSubscription();
-            setActive("已开始状态订阅(开订阅)");
-          }, accWhen: () => state != ModelState.active));
-
-  /// 关闭状态订阅 (停止刷新数据,但保持充血)
-  /// [ModelState.active]  -> [ModelState.done]
-  Future<EX?> actUnsubscribe() async =>
-      await actWrapper(() => reqWrapper(() async {
-            await onCloseSubs();
-            setDone("已关闭状态订阅(关订阅)");
-          }, accWhen: () => state == ModelState.active));
-
-  /// (全量)刷新状态 (单次刷新数据,保持充血)
-  /// 先 清理缓存状态; 后 获取状态数据
-  ///  any                  -> [ModelState.done]
-  Future<EX?> actRefresh({bool isActive = false}) async =>
-      await actWrapper(() => reqWrapper(() async {
-            await onReset();
-            await onFetch(isActive: isActive);
-            setActive("已完成 状态刷新(清理+获取)");
-          }));
-
-  /// 开启订阅流 (增量刷新数据)
-  FutureOr<void> onSubscription();
-
-  /// 关闭订阅流 (停止刷新数据)
-  FutureOr<void> onCloseSubs();
-
-  /// 获取状态数据 (全量拉取数据)
-  /// 对于 数据: 设为null或clear()
-  /// 对于 子状态[ModelSidecar] : 根据需要,调用 [actInitSubscription]
-  FutureOr<void> onFetch({bool isActive = false});
-
-  /// 清理缓存数据 (清理数据)
-  /// 对于 数据: 设为null或clear()
-  /// 对于 子状态[ModelSidecar] : 调用 [actCloseReset]
-  FutureOr<void> onReset();
-
-  /// Deprecated 方法
-  /// ----------------------------------------------------------------------
-
-  @Deprecated('actUnsubscribe')
-  Future<EX?> actCloseSubs() => actUnsubscribe();
-
-  @Deprecated('actCloseReset')
-  Future<EX?> actReset() => actCloseReset();
-
-  @Deprecated('actRefresh')
-  Future<EX?> actFetch({bool isActive = false}) =>
-      actRefresh(isActive: isActive);
 }

@@ -5,7 +5,8 @@ mixin OnInitStateMx<PAGE extends StatefulWidget, A> on State<PAGE> {
 
   @override
   void initState() {
-    Future.microtask(() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       final msgr = ScaffoldMessenger.of(context);
       final a = context.read<A>();
       _onInitStateMxSub = onInitState(msgr, a);

@@ -1,3 +1,18 @@
+# ProviderSidecar
+
+> 选择Provider: 可通过DevTools查看当前状态
+
+## v1.5.x
+
+> 与BloC的区别：同一个Model支持多个实例，BloC只允许单个实例存在
+
+- 基于 v1.4.x
+- 新增 SidecarProvider
+- 移除Intent/Act，只保留Event。
+  - 对于UI操作，需要将Intent转换为对应的完成时Event。如 Intent‘提交表单’转换为 Event‘已发送表单提交请求’
+- 移除SubState
+- 移除ProviderSidecar。改用ModelSidecar
+
 ## v1.4.x
 
 - Intent：描述用户的操作，UI层输入的事件，是一种特殊的Event；显然UI可以直接发送Event，命令State变更。

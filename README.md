@@ -6,6 +6,16 @@
 
 > 与BloC的区别：同一个Model支持多个实例，BloC只允许单个实例存在
 
+### 1.5.2
+
+- 新增 SidecarEvtMx 取代 EvtEntranceMx，不再依赖 BaseSidecar
+- 新增 SidecarModel 取代 SidecarProvider
+  - [SidecarModel] 就是数据本身，只不过[ChangeNotifier]赋予它通知UI刷新的能力。
+      通过 final id 来标识唯一的[SidecarModel]实例
+    [SidecarProvider]则更像是一个数据的提供器，代理数据类向UI发出通知。
+
+### 1.5.1
+
 - 基于 v1.4.x
 - 新增 SidecarProvider
 - 移除Intent/Act，只保留Event。

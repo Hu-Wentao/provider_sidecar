@@ -2,37 +2,46 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:provider_sidecar/provider_sidecar.dart';
+part 'event.dart';
 
-abstract class IEvent {}
+/// since v1.5.2
+/// 可以取代 [SidecarProvider]
+/// [SidecarModel] 本身就是数据，只不过[ChangeNotifier]赋予它通知UI刷新的能力
+/// [SidecarProvider]则更像是一个数据的提供器，代理数据类向UI发出通知。
+abstract class SidecarModel<EVT, ID> extends MsgSidecar with SidecarEvtMx<EVT> {
+  final ID id;
+  SidecarModel({required this.id});
 
-class BaseEvent<S> implements IEvent {
-  final S state;
-  final DebugInfo? debugInfo;
-
-  const BaseEvent(this.state, [this.debugInfo]);
-
-  BaseEvent.debug(this.state, [String? msg, int lineAt = 1])
-      : debugInfo = DebugInfo.of(msg, lineAt);
+  /// @override
+  /// FutureOr<void> onEvent(evt) {
+  ///   // do some logic ...
+  ///   // setState( ... )     // notify refresh UI
+  ///   // add( ... )          // add another event
+  /// }
 }
 
-///
-/// [DebugInfo.of]
-///   [lineAt] 0 表示构造方法被调用的行
-///            1 表示构造方法被调用的方法被调用的行（默认）
-///           -1 表示关闭StackTrace过滤，打印全部StackTrace
-class DebugInfo {
-  final String? msg;
-  final StackTrace trace;
-  final int lineAt;
+abstract class MsgSidecar extends ChangeNotifier with SidecarLoggerMx {
+  MsgSidecar({this.msg = 'Init with Constructor'});
 
-  const DebugInfo(this.msg, this.trace, this.lineAt);
+  String msg;
 
-  DebugInfo.of([this.msg, this.lineAt = 1]) : trace = StackTrace.current;
-
-  ///
-  String get onlyStack => trace.lineAt(lineAt, true) ?? '';
+  T? setState<T>(
+    String m, {
+    T? Function()? before,
+    int traceLine = 1,
+  }) {
+    log("${(traceLine > -1) ? StackTrace.current.lineAt(traceLine)?.replaceAll(RegExp(r"^.+\("), r"") : ''}# $m");
+    if (m != msg || before != null) {
+      final r = before?.call();
+      msg = m;
+      notifyListeners();
+      return r;
+    }
+    return null;
+  }
 }
 
+@Deprecated('use MsgSidecar, use final ID id instead S state')
 abstract class BaseSidecar<S> extends ChangeNotifier with SidecarLoggerMx {
   // 配置默认的初始化状态 可以省略`setUninitialized`方法
   BaseSidecar({

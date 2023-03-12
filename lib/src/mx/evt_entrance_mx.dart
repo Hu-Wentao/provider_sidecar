@@ -27,7 +27,10 @@ mixin EvtEntranceMx<EVT, S> on BaseSidecar<S> {
 mixin SidecarEvtMx<EVT> on SidecarLoggerMx {
   late final PublishSubject<EVT> _subject = PublishSubject<EVT>()
     ..stream.listen(
-      onEvent,
+          (e) {
+        log('onEvent# $e');
+        onEvent(e);
+      },
       onError: onError,
     );
 
@@ -41,6 +44,7 @@ mixin SidecarEvtMx<EVT> on SidecarLoggerMx {
 
   @mustCallSuper
   onError(e, s) {
-    log('actWrapper.catch# [${e.runtimeType}] ${StackTrace.current} \n$e,\n$s');
+    lgShot(
+        'actWrapper.catch# [${e.runtimeType}] ${StackTrace.current} \n$e,\n$s');
   }
 }

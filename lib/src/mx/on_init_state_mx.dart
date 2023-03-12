@@ -25,11 +25,12 @@ mixin OnInitStateMx<PAGE extends StatefulWidget, A> on State<PAGE> {
 }
 
 mixin OnInitStateMx2<PAGE extends StatefulWidget, A, B> on State<PAGE> {
-  StreamSubscription? _onInitStateMxSub;
+  Iterable<StreamSubscription?>? _onInitStateMxSub;
 
   @override
   void initState() {
-    Future.microtask(() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       final msgr = ScaffoldMessenger.of(context);
       final a = context.read<A>();
       final b = context.read<B>();
@@ -38,21 +39,25 @@ mixin OnInitStateMx2<PAGE extends StatefulWidget, A, B> on State<PAGE> {
     super.initState();
   }
 
-  StreamSubscription? onInitState(ScaffoldMessengerState msgr, A a, B b);
+  Iterable<StreamSubscription?> onInitState(
+      ScaffoldMessengerState msgr, A a, B b);
 
   @override
   dispose() {
-    _onInitStateMxSub?.cancel();
+    for (final s in _onInitStateMxSub?.toList() ?? []) {
+      s?.cancel();
+    }
     super.dispose();
   }
 }
 
 mixin OnInitStateMx3<PAGE extends StatefulWidget, A, B, C> on State<PAGE> {
-  StreamSubscription? _onInitStateMxSub;
+  Iterable<StreamSubscription?>? _onInitStateMxSub;
 
   @override
   void initState() {
-    Future.microtask(() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       final msgr = ScaffoldMessenger.of(context);
       final a = context.read<A>();
       final b = context.read<B>();
@@ -62,11 +67,18 @@ mixin OnInitStateMx3<PAGE extends StatefulWidget, A, B, C> on State<PAGE> {
     super.initState();
   }
 
-  StreamSubscription? onInitState(ScaffoldMessengerState msgr, A a, B b, C c);
+  Iterable<StreamSubscription?> onInitState(
+    ScaffoldMessengerState msgr,
+    A a,
+    B b,
+    C c,
+  );
 
   @override
   dispose() {
-    _onInitStateMxSub?.cancel();
+    for (final s in _onInitStateMxSub?.toList() ?? []) {
+      s?.cancel();
+    }
     super.dispose();
   }
 }
